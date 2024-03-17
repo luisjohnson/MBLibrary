@@ -60,8 +60,30 @@ enum class ExceptionCode {
     GatewayTargetDeviceFailedToRespond = 0x0B
 };
 
+/**
+ * @brief Check if the given Modbus function code is valid.
+ *
+ * This function checks if the given Modbus function code is valid by comparing it
+ * with a list of valid codes. The valid codes are defined in the ModbusFunctionCode
+ * enumeration.
+ *
+ * @param b The Modbus function code to validate.
+ * @return true if the Modbus function code is valid, false otherwise.
+ */
 bool isValidModbusFunctionCode(std::byte b);
 
+/**
+ * @brief Fills the given value with leading zeros to match the desired length.
+ *
+ * This function takes an integer value and a length as parameters. It converts the integer value to a string and then adds leading zeros to the string to match the desired length. If
+* the length of the converted string is already equal to or greater than the desired length, it will just return the converted string without any modification.
+ *
+ * @param value The integer value to be filled with leading zeros.
+ * @param length The desired length of the resulting string.
+ * @return The input value as a string with leading zeros to match the desired length.
+ *
+ * @note The function assumes that the desired length is a positive integer.
+ */
 std::string fillWithZeros(int value, int length);
 
 template<typename T>
@@ -77,29 +99,49 @@ public:
 
     std::string getAddressWithPrefix() const;
 
-    void useHexPrefix(bool value);
+    std::string getAddressWithHexPrefix() const;
 
 protected:
     std::string _prefix;
     int _address{};
     T _value;
-    bool _useHexPrefix = false;
 };
 
+/**
+ * @brief Returns the address of the Modbus register.
+ *
+ * @tparam T The data type of the Modbus register.
+ * @return int The address of the Modbus register.
+ */
 template<typename T>
 int ModbusRegister<T>::getAddress() const {
     return _address;
 }
 
+/**
+ * @brief Get the address of the ModbusRegister with a prefix.
+ *        The address is filled with leading zeros to have a total length of 5 characters.
+ *        If _useHexPrefix is true, the prefix will have an "x" appended to it.
+ *
+ * @return The address with prefix as a string.
+ */
 template<typename T>
 std::string ModbusRegister<T>::getAddressWithPrefix() const {
-    return _prefix + (_useHexPrefix ? "x" : "") + fillWithZeros(_address, 5);
+    return _prefix + fillWithZeros(_address, 5);
 }
 
+/**
+ * @brief Retrieves the address with a hexadecimal prefix.
+ *
+ * This function returns the Modbus register's address, formatted as a string with a hexadecimal prefix. The address is obtained by concatenating the prefix stored in the `_prefix` member
+* variable with the address converted to a string with leading zeros added to match the desired length, which is 5 in this case.
+ *
+ * @return The Modbus register's address formatted as a string with a hexadecimal prefix.
+ */
 template<typename T>
-void ModbusRegister<T>::useHexPrefix(bool value) {
-    _useHexPrefix = value;
-};
+std::string ModbusRegister<T>::getAddressWithHexPrefix() const {
+    return _prefix + "x" + fillWithZeros(_address, 5);
+}
 
 class ModbusCoil final : public ModbusRegister<bool> {
 public:
