@@ -37,10 +37,6 @@ public:
     std::vector<std::shared_ptr<ModbusInputRegister> > getInputRegisters(int start, int length);
 
 private:
-    void sortCoils();
-    void sortDiscreteInputs();
-    void sortHoldingRegisters();
-    void sortInputRegisters();
     std::vector<std::shared_ptr<ModbusCoil> > _coils;
     std::vector<std::shared_ptr<ModbusDiscreteInput> > _discreteInputs;
     std::vector<std::shared_ptr<ModbusHoldingRegister> > _holdingRegisters;

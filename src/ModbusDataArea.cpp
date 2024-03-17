@@ -7,33 +7,41 @@ ModbusDataArea::ModbusDataArea() : _coils(), _discreteInputs(), _holdingRegister
 void ModbusDataArea::insertCoil(const std::shared_ptr<ModbusCoil> &coil) {
     std::lock_guard<std::mutex> lock(_mutex);
     _coils.push_back(coil);
-    // TODO Troubleshoot sorting methods
-//    if (_coils.size() > 1)
-//        sortCoils();
+    // DONE Troubleshoot sorting methods
+    if (_coils.size() > 1)
+        std::ranges::sort(_coils, [](const auto &a, const auto &b) {
+            return a->getAddress() < b->getAddress();
+        });
 }
 
 void ModbusDataArea::insertDiscreteInput(const std::shared_ptr<ModbusDiscreteInput> &input) {
     std::lock_guard<std::mutex> lock(_mutex);
     _discreteInputs.push_back(input);
-    // TODO Troubleshoot sorting methods
-//    if (_discreteInputs.size() > 1)
-//        sortDiscreteInputs();
+    // DONE Troubleshoot sorting methods
+    if (_discreteInputs.size() > 1)
+        std::ranges::sort(_discreteInputs, [](const auto &a, const auto &b) {
+            return a->getAddress() < b->getAddress();
+        });
 }
 
 void ModbusDataArea::insertHoldingRegister(const std::shared_ptr<ModbusHoldingRegister> &holdingRegister) {
     std::lock_guard<std::mutex> lock(_mutex);
     _holdingRegisters.push_back(holdingRegister);
-    // TODO Troubleshoot sorting methods
-//    if (_holdingRegisters.size() > 1)
-//        sortHoldingRegisters();
+    // DONE Troubleshoot sorting methods
+    if (_holdingRegisters.size() > 1)
+        std::ranges::sort(_holdingRegisters, [](const auto &a, const auto &b) {
+            return a->getAddress() < b->getAddress();
+        });
 }
 
 void ModbusDataArea::insertInputRegister(const std::shared_ptr<ModbusInputRegister> &inputRegister) {
     std::lock_guard<std::mutex> lock(_mutex);
-    // TODO Troubleshoot sorting methods
+    // DONE Troubleshoot sorting methods
     _inputRegisters.push_back(inputRegister);
-//    if (_inputRegisters.size() > 1)
-//        sortInputRegisters();
+    if (_inputRegisters.size() > 1)
+        std::ranges::sort(_inputRegisters, [](const auto &a, const auto &b) {
+            return a->getAddress() < b->getAddress();
+        });
 }
 
 std::vector<std::shared_ptr<ModbusCoil> > ModbusDataArea::getAllCoils() {
@@ -76,6 +84,7 @@ std::vector<std::shared_ptr<ModbusCoil> > ModbusDataArea::getCoils(int start, in
     return {startIt, endIt};
 
 }
+
 std::vector<std::shared_ptr<ModbusDiscreteInput> > ModbusDataArea::getDiscreteInputs(int start, int length) {
     int end = start + length - 1;
     std::lock_guard<std::mutex> lock(_mutex);
@@ -135,36 +144,4 @@ std::vector<std::shared_ptr<ModbusInputRegister> > ModbusDataArea::getInputRegis
     }
 
     return {startIt, endIt};
-}
-
-void ModbusDataArea::sortCoils() {
-    std::lock_guard<std::mutex> lock(_mutex);
-    auto comparator = [](const auto &a, const auto &b) {
-        return a->getAddress() < b->getAddress();
-    };
-    std::ranges::sort(_coils, comparator);
-}
-
-void ModbusDataArea::sortDiscreteInputs() {
-    std::lock_guard<std::mutex> lock(_mutex);
-    auto comparator = [](const auto &a, const auto &b) {
-        return a->getAddress() < b->getAddress();
-    };
-    std::ranges::sort(_discreteInputs, comparator);
-}
-
-void ModbusDataArea::sortHoldingRegisters() {
-    std::lock_guard<std::mutex> lock(_mutex);
-    auto comparator = [](const auto &a, const auto &b) {
-        return a->getAddress() < b->getAddress();
-    };
-    std::ranges::sort(_holdingRegisters, comparator);
-}
-
-void ModbusDataArea::sortInputRegisters() {
-    std::lock_guard<std::mutex> lock(_mutex);
-    auto comparator = [](const auto &a, const auto &b) {
-        return a->getAddress() < b->getAddress();
-    };
-    std::ranges::sort(_inputRegisters, comparator);
 }
