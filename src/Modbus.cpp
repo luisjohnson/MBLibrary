@@ -3,30 +3,30 @@
 #include <iomanip>
 #include <sstream>
 
-static const std::vector<ModbusFunctionCode> validCodes = {
-    ModbusFunctionCode::ReadDiscreteInputs,
-    ModbusFunctionCode::ReadCoils,
-    ModbusFunctionCode::WriteSingleCoil,
-    ModbusFunctionCode::WriteMultipleCoils,
-    ModbusFunctionCode::ReadInputRegister,
-    ModbusFunctionCode::ReadHoldingRegisters,
-    ModbusFunctionCode::WriteSingleRegister,
-    ModbusFunctionCode::WriteMultipleRegisters,
-    ModbusFunctionCode::ReadWriteMultipleRegisters,
-    ModbusFunctionCode::ReadFifoQueue,
-    ModbusFunctionCode::ReadFileRecord,
-    ModbusFunctionCode::WriteFileRecord,
-    ModbusFunctionCode::ReadExceptionStatus,
-    ModbusFunctionCode::Diagnostic,
-    ModbusFunctionCode::GetComEventCounter,
-    ModbusFunctionCode::GetComEventLog,
-    ModbusFunctionCode::ReportSlaveID,
-    ModbusFunctionCode::ReadDeviceIdentification
-};
 
-bool isValidModbusFunctionCode(std::byte b) {
-    const auto code = static_cast<ModbusFunctionCode>(static_cast<uint8_t>(b));
-    return std::ranges::find(validCodes, code) != validCodes.end();
+bool isValidModbusFunctionCode(ModbusFunctionCode code) {
+    switch (code) {
+        case ModbusFunctionCode::ReadDiscreteInputs:
+        case ModbusFunctionCode::ReadCoils:
+        case ModbusFunctionCode::WriteSingleCoil:
+        case ModbusFunctionCode::WriteSingleRegister:
+        case ModbusFunctionCode::WriteMultipleCoils:
+        case ModbusFunctionCode::ReadInputRegister:
+        case ModbusFunctionCode::ReadHoldingRegisters:
+        case ModbusFunctionCode::WriteMultipleRegisters:
+        case ModbusFunctionCode::ReadWriteMultipleRegisters:
+        case ModbusFunctionCode::ReadFifoQueue:
+        case ModbusFunctionCode::ReadFileRecord:
+        case ModbusFunctionCode::WriteFileRecord:
+        case ModbusFunctionCode::ReadExceptionStatus:
+        case ModbusFunctionCode::Diagnostic:
+        case ModbusFunctionCode::GetComEventCounter:
+        case ModbusFunctionCode::GetComEventLog:
+        case ModbusFunctionCode::ReportSlaveID:
+        case ModbusFunctionCode::ReadDeviceIdentification:
+        default:
+            return false;
+    }
 }
 
 std::string fillWithZeros(const int value, const int length) {
@@ -36,6 +36,19 @@ std::string fillWithZeros(const int value, const int length) {
     std::ostringstream oss;
     oss << std::setw(length) << std::setfill('0') << value;
     return oss.str();
+}
+
+ModbusFunctionCode byteToModbusFunctionCode(std::byte b) {
+    auto const code = static_cast<ModbusFunctionCode>(b);
+    if (!isValidModbusFunctionCode(code))
+        throw InvalidFunctionCodeException();
+    return code;
+}
+
+int calculateBytesFromBits(int numberOfBits) {
+    const int BitsPerByte = 8;
+    int additionalBitsForUnevenByte = (numberOfBits % BitsPerByte) == 0 ? 0 : 1;
+    return (numberOfBits / BitsPerByte) + additionalBitsForUnevenByte;
 }
 
 ModbusCoil::ModbusCoil(const int address, bool value) {

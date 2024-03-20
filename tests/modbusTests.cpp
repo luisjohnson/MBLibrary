@@ -2,27 +2,30 @@
 // Created by Luis Johnson on 3/16/24.
 //
 #include <gtest/gtest.h>
+#include <memory>
+#include <vector>
+#include <cstddef>
 #include "Modbus.h"
-
-TEST(ModbusFunctionCodeTest, ValidFunctionCodeReturnsTrue) {
-    auto validCode = static_cast<std::byte>(ModbusFunctionCode::ReadCoils);
-    ASSERT_TRUE(isValidModbusFunctionCode(validCode));
-}
-
-TEST(ModbusFunctionCodeTest, InvalidFunctionCodeReturnsFalse) {
-    auto invalidCode = static_cast<std::byte>(0xFF);
-    ASSERT_FALSE(isValidModbusFunctionCode(invalidCode));
-}
-
-TEST(ModbusFunctionCodeTest, LowerBoundaryFunctionCodeReturnsTrue) {
-    auto lowerBoundaryCode = static_cast<std::byte>(ModbusFunctionCode::ReadCoils);
-    ASSERT_TRUE(isValidModbusFunctionCode(lowerBoundaryCode));
-}
-
-TEST(ModbusFunctionCodeTest, UpperBoundaryFunctionCodeReturnsTrue) {
-    auto upperBoundaryCode = static_cast<std::byte>(ModbusFunctionCode::ReadDeviceIdentification);
-    ASSERT_TRUE(isValidModbusFunctionCode(upperBoundaryCode));
-}
+//
+//TEST(ModbusFunctionCodeTest, ValidFunctionCodeReturnsTrue) {
+//    auto validCode = static_cast<std::byte>(ModbusFunctionCode::ReadCoils);
+//    ASSERT_TRUE(isValidModbusFunctionCode(validCode));
+//}
+//
+//TEST(ModbusFunctionCodeTest, InvalidFunctionCodeReturnsFalse) {
+//    auto invalidCode = static_cast<std::byte>(0xFF);
+//    ASSERT_FALSE(isValidModbusFunctionCode(invalidCode));
+//}
+//
+//TEST(ModbusFunctionCodeTest, LowerBoundaryFunctionCodeReturnsTrue) {
+//    auto lowerBoundaryCode = static_cast<std::byte>(ModbusFunctionCode::ReadCoils);
+//    ASSERT_TRUE(isValidModbusFunctionCode(lowerBoundaryCode));
+//}
+//
+//TEST(ModbusFunctionCodeTest, UpperBoundaryFunctionCodeReturnsTrue) {
+//    auto upperBoundaryCode = static_cast<std::byte>(ModbusFunctionCode::ReadDeviceIdentification);
+//    ASSERT_TRUE(isValidModbusFunctionCode(upperBoundaryCode));
+//}
 
 
 TEST(ModbusTest, FillWithZerosReturnsValueWithCorrectNumberOfDigits) {

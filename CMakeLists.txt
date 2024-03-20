@@ -28,3 +28,6 @@ target_link_libraries(runModbusTests gtest gtest_main MBLibrary)
 
 add_executable(runDataMapTests tests/dataMapTests.cpp)
 target_link_libraries(runDataMapTests gtest gtest_main MBLibrary)
+
+add_executable(runPDUTests tests/pduTests.cpp)
+target_link_libraries(runPDUTests gtest gtest_main MBLibrary)

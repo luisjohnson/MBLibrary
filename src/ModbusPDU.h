@@ -12,14 +12,19 @@
 #include "ModbusDataArea.h"
 
 class ModbusPDU {
+
 public:
-    explicit ModbusPDU(std::vector<std::byte> _rawData);
+    ModbusPDU(std::vector<std::byte> _rawData);
+    ModbusPDU(ModbusFunctionCode functionCode, std::vector<std::byte> data);
+    ModbusFunctionCode getFunctionCode();
+    std::vector<std::byte> buildResponse(std::shared_ptr<ModbusDataArea> modbusDataArea);
 
-    ModbusPDU(ModbusFunctionCode functionCode, std::vector<std::byte> _data);
 
-protected:
-    ModbusFunctionCode _functionCode;
+private:
     std::vector<std::byte> _data;
+    ModbusFunctionCode _functionCode;
+    std::vector<std::byte> getReadCoilsResponse(const std::shared_ptr<ModbusDataArea>& modbusDataArea);
+
 };
 
 #endif //PDU_H

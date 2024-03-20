@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <ranges>
 #include <exception>
+#include <memory>
 
 /**
 * @enum ModbusFunctionCode
@@ -73,15 +74,15 @@ enum class ExceptionCode {
  * with a list of valid codes. The valid codes are defined in the ModbusFunctionCode
  * enumeration.
  *
- * @param b The Modbus function code to validate.
+ * @param code The Modbus function code to validate.
  * @return true if the Modbus function code is valid, false otherwise.
  *
  * @par Example
  * @code{.cpp}
- * bool validity = isValidModbusFunctionCode(static_cast<std::byte>(ModbusFunctionCode::ReadCoils));
+ * bool validity = isValidModbusFunctionCode(ModbusFunctionCode::ReadCoils);
  * @endcode
  */
-bool isValidModbusFunctionCode(std::byte b);
+bool isValidModbusFunctionCode(ModbusFunctionCode code);
 
 /**
  * @class InvalidFunctionCodeException
@@ -91,12 +92,25 @@ bool isValidModbusFunctionCode(std::byte b);
  * It inherits from std::exception and overrides the what() method to provide
  * a description of the exception.
  */
-class InvalidFunctionCodeException : public std::exception {
+class InvalidFunctionCodeException : std::exception {
 public:
-    const char* what() const throw() override {
+    const char *what() const noexcept override {
         return "Invalid Modbus function code provided.";
     }
 };
+
+/**
+ * @brief Converts a byte value to a Modbus function code.
+ *
+ * This function takes a byte value and converts it to the corresponding Modbus function code.
+ * The byte value is cast to the ModbusFunctionCode enumeration.
+ * If the resulting code is not a valid Modbus function code, an exception is thrown.
+ *
+ * @param b The byte value to be converted.
+ * @throws InvalidFunctionCodeException if the resulting code is not a valid Modbus function code.
+ * @return The Modbus function code corresponding to the byte value.
+ */
+ModbusFunctionCode byteToModbusFunctionCode(std::byte);
 
 /**
  * @brief Fills the given value with leading zeros to match the desired length.
@@ -116,6 +130,18 @@ public:
  * @endcode
  */
 std::string fillWithZeros(int value, int length);
+
+/**
+ * @brief Calculates the number of bytes from the given number of bits.
+ *
+ * The function takes the number of bits as input and calculates the corresponding number of bytes.
+ * A byte is defined as 8 bits. If there are any additional bits that do not form a complete byte,
+ * an additional byte is added to the result.
+ *
+ * @param numberOfBits The number of bits for which to calculate the number of bytes.
+ * @return The number of bytes.
+ */
+int calculateBytesFromBits(int numberOfBits);
 
 template<typename T>
 class ModbusRegister {
@@ -458,5 +484,47 @@ public:
      */
     void write(uint16_t value) override;
 };
+
+/**
+ * @brief Packs boolean Modbus registers into bytes.
+ *
+ * This function takes a vector of shared pointers to Modbus registers (either ModbusCoil or ModbusDiscreteInput) and packs their boolean values into bytes.
+ * Each bit in the byte corresponds to the boolean value of a register. The function returns a vector of bytes.
+ *
+ * @tparam T The type of the Modbus registers. Must be either ModbusCoil or ModbusDiscreteInput.
+ * @param registers A vector of shared pointers to the Modbus registers to be packed into bytes.
+ * @return A vector of bytes representing the packed boolean values of the Modbus registers.
+ *
+ * @throws static_assert If the type T is not ModbusCoil or ModbusDiscreteInput.
+ *
+ * @par Example
+ * @code{.cpp}
+ * std::vector<std::shared_ptr<ModbusCoil>> coils;
+ * // ... (initialize the coils)
+ * std::vector<std::byte> packedCoils = packBooleanRegistersIntoBytes(coils);
+ * @endcode
+ */
+template<typename T>
+std::vector<std::byte> packBooleanRegistersIntoBytes(std::vector<std::shared_ptr<T>> &registers) {
+    static_assert(std::is_same<T, ModbusCoil>::value || std::is_same<T, ModbusDiscreteInput>::value,
+                  "packBooleanRegistersIntoBytes accept only objects of type ModbusCoil or ModbusDiscreteInput.");
+    auto numberOfBits = registers.size();
+    auto byteCount = calculateBytesFromBits(numberOfBits);
+    std::vector<std::byte> bytes(byteCount);
+
+    int bitCounter = 0;
+    int byteCounter = 0;
+
+    for (const auto &reg: registers) {
+        const auto status = static_cast<std::byte>(reg->read());
+        bytes[byteCounter] = bytes[byteCounter] | (status << bitCounter);
+        bitCounter++;
+        if (bitCounter > 7) {
+            bitCounter = 0;
+            byteCounter++;
+        }
+    }
+    return bytes;
+}
 
 #endif //MODBUS_H
