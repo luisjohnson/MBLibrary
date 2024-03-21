@@ -17,7 +17,7 @@ public:
     ModbusPDU(std::vector<std::byte> _rawData);
     ModbusPDU(ModbusFunctionCode functionCode, std::vector<std::byte> data);
     ModbusFunctionCode getFunctionCode();
-    std::vector<std::byte> buildResponse(std::shared_ptr<ModbusDataArea> modbusDataArea);
+    std::vector<std::byte> buildResponse(const std::shared_ptr<ModbusDataArea>& modbusDataArea);
 
 
 private:
@@ -26,5 +26,7 @@ private:
     std::vector<std::byte> getReadCoilsResponse(const std::shared_ptr<ModbusDataArea>& modbusDataArea);
 
 };
+
+std::vector<std::byte> buildExceptionResponse(ModbusFunctionCode functionCode, ModbusExceptionCode exceptionCode);
 
 #endif //PDU_H

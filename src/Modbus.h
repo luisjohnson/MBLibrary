@@ -55,7 +55,7 @@ enum class ModbusFunctionCode {
 };
 
 
-enum class ExceptionCode {
+enum class ModbusExceptionCode {
     IllegalFunction = 0x01,
     IllegalDataAddress = 0x02,
     IllegalDataValue = 0x03,

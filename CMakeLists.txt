@@ -17,7 +17,9 @@ add_library(MBLibrary STATIC
         src/ModbusDataArea.cpp
         src/ModbusDataArea.h
         src/ModbusPDUFactory.cpp
-        src/ModbusPDUFactory.h)
+        src/ModbusPDUFactory.h
+        src/ModbusUtilities.cpp
+        src/ModbusUtilities.h)
 target_include_directories(MBLibrary PUBLIC src)
 
 add_executable(runTests tests/pduTests.cpp)
@@ -31,3 +33,6 @@ target_link_libraries(runDataMapTests gtest gtest_main MBLibrary)
 
 add_executable(runPDUTests tests/pduTests.cpp)
 target_link_libraries(runPDUTests gtest gtest_main MBLibrary)
+
+add_executable(runUtilityTests tests/utilityTests.cpp)
+target_link_libraries(runUtilityTests gtest gtest_main MBLibrary)
