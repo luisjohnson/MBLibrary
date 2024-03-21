@@ -39,10 +39,7 @@ std::string fillWithZeros(const int value, const int length) {
 }
 
 ModbusFunctionCode byteToModbusFunctionCode(std::byte b) {
-    auto const code = static_cast<ModbusFunctionCode>(b);
-    if (!isValidModbusFunctionCode(code))
-        throw InvalidFunctionCodeException();
-    return code;
+    return static_cast<ModbusFunctionCode>(b);
 }
 
 int calculateBytesFromBits(int numberOfBits) {
@@ -57,12 +54,13 @@ ModbusCoil::ModbusCoil(const int address, bool value) {
     _prefix = "0";
 }
 
-bool ModbusCoil::read() {
-    return _value;
-}
 
 void ModbusCoil::write(bool value) {
     _value = value;
+}
+
+bool ModbusCoil::read() {
+    return _value;
 }
 
 ModbusDiscreteInput::ModbusDiscreteInput(int address, bool value) {

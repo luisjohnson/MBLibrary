@@ -295,53 +295,54 @@ std::string ModbusRegister<T>::getAddressWithHexPrefix() const {
 }
 
 class ModbusCoil final : public ModbusRegister<bool> {
-public:
+    public:
     /**
+     * @class ModbusCoil
      * @brief Represents a Modbus coil.
      *
-     * This class represents a Modbus coil with an address and a value.
-     * It provides methods for reading and writing the value of the coil.
+     * This class provides methods to read and write values to a Modbus coil.
+     * A Modbus coil is a single bit in a Modbus device that can be read and written to.
      *
      * @par Example
      * @code{.cpp}
-     * ModbusCoil coil1(1, true); // Create a ModbusCoil object
+     * ModbusCoil coil1(1, true); // Create a ModbusCoil object and initialize it to true
      * @endcode
      */
     ModbusCoil(int address, bool value);
 
     /**
-     * @brief Reads the value of the Modbus coil.
+     * @brief Reads the value of the ModbusCoil.
      *
-     * This function is used to read the current value of the Modbus coil.
+     * This function retrieves the value of the ModbusCoil and returns it.
      *
-     * @return true if the coil value is true, false otherwise.
+     * @return bool The value of the ModbusCoil.
      *
      * @par Example
      * @code{.cpp}
-     * ModbusCoil coil1(1, true); // Create a ModbusCoil object
+     * ModbusCoil coil1(1, true); // Create a ModbusCoil object and initialize it to true
      * bool coilValue = coil1.read(); // Returns: true
      * @endcode
      */
     bool read() override;
 
     /**
-     * @brief Writes a boolean value to the ModbusCoil.
+     * @brief Writes a boolean value to the ModbusCoil object.
      *
-     * This function allows writing a boolean value to the ModbusCoil object. The value will be stored in the internal variable `_value` of type `T`.
+     * This function updates the value of the ModbusCoil object with the specified boolean value.
      *
-     * @param value The boolean value to be written to the ModbusCoil.
+     * @param value The boolean value to be written to the ModbusCoil object.
      *
-     * @pre None.
-     * @post The `_value` variable will be updated with the specified boolean `value`.
+     * @note This function overrides the write function from the base class.
      *
      * @par Example
      * @code{.cpp}
-     * ModbusCoil coil(1, true); // Create a ModbusCoil object and initialize it to true
-     * coil.write(false); // Updates the value of the coil to false
+     * ModbusCoil coil1(1, true); // Create a ModbusCoil object and initialize it to true
+     * coil1.write(false); // Updates the value of the coil to false
      * @endcode
      */
     void write(bool value) override;
 };
+
 
 class ModbusDiscreteInput final : public ModbusRegister<bool> {
 public:
@@ -485,46 +486,6 @@ public:
     void write(uint16_t value) override;
 };
 
-/**
- * @brief Packs boolean Modbus registers into bytes.
- *
- * This function takes a vector of shared pointers to Modbus registers (either ModbusCoil or ModbusDiscreteInput) and packs their boolean values into bytes.
- * Each bit in the byte corresponds to the boolean value of a register. The function returns a vector of bytes.
- *
- * @tparam T The type of the Modbus registers. Must be either ModbusCoil or ModbusDiscreteInput.
- * @param registers A vector of shared pointers to the Modbus registers to be packed into bytes.
- * @return A vector of bytes representing the packed boolean values of the Modbus registers.
- *
- * @throws static_assert If the type T is not ModbusCoil or ModbusDiscreteInput.
- *
- * @par Example
- * @code{.cpp}
- * std::vector<std::shared_ptr<ModbusCoil>> coils;
- * // ... (initialize the coils)
- * std::vector<std::byte> packedCoils = packBooleanRegistersIntoBytes(coils);
- * @endcode
- */
-template<typename T>
-std::vector<std::byte> packBooleanRegistersIntoBytes(std::vector<std::shared_ptr<T>> &registers) {
-    static_assert(std::is_same<T, ModbusCoil>::value || std::is_same<T, ModbusDiscreteInput>::value,
-                  "packBooleanRegistersIntoBytes accept only objects of type ModbusCoil or ModbusDiscreteInput.");
-    auto numberOfBits = registers.size();
-    auto byteCount = calculateBytesFromBits(numberOfBits);
-    std::vector<std::byte> bytes(byteCount);
 
-    int bitCounter = 0;
-    int byteCounter = 0;
-
-    for (const auto &reg: registers) {
-        const auto status = static_cast<std::byte>(reg->read());
-        bytes[byteCounter] = bytes[byteCounter] | (status << bitCounter);
-        bitCounter++;
-        if (bitCounter > 7) {
-            bitCounter = 0;
-            byteCounter++;
-        }
-    }
-    return bytes;
-}
 
 #endif //MODBUS_H

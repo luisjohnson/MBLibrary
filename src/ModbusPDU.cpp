@@ -2,7 +2,6 @@
 #include "Modbus.h"
 #include "ModbusPDU.h"
 
-std::vector<std::byte> packBooleanRegistersIntoBytes(const std::vector<std::shared_ptr<ModbusCoil>> &vector1);
 
 ModbusPDU::ModbusPDU(std::vector<std::byte> _rawData) : _functionCode(byteToModbusFunctionCode(_rawData[0])) {
     _data = std::vector<std::byte>(_rawData.begin() + 1, _rawData.end());
@@ -10,14 +9,13 @@ ModbusPDU::ModbusPDU(std::vector<std::byte> _rawData) : _functionCode(byteToModb
 
 ModbusPDU::ModbusPDU(ModbusFunctionCode functionCode, std::vector<std::byte> data) : _functionCode(functionCode),
                                                                                      _data(std::move(data)) {
-
 }
 
 ModbusFunctionCode ModbusPDU::getFunctionCode() {
     return _functionCode;
 }
 
-std::vector<std::byte> ModbusPDU::buildResponse(const std::shared_ptr<ModbusDataArea>& modbusDataArea) {
+std::vector<std::byte> ModbusPDU::buildResponse(const std::shared_ptr<ModbusDataArea> &modbusDataArea) {
     switch (_functionCode) {
         case ModbusFunctionCode::ReadCoils:
             return getReadCoilsResponse(modbusDataArea);
