@@ -20,6 +20,7 @@ std::vector<std::byte> ModbusPDU::buildResponse(const std::shared_ptr<ModbusData
         case ModbusFunctionCode::ReadCoils:
             return getReadCoilsResponse(modbusDataArea);
         default:
+            //  Build exception response for invalid function code
             return buildExceptionResponse(_functionCode, ModbusExceptionCode::IllegalFunction);
     }
 }
