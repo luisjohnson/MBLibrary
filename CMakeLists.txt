@@ -16,8 +16,6 @@ add_library(MBLibrary STATIC
         src/ModbusPDU.h
         src/ModbusDataArea.cpp
         src/ModbusDataArea.h
-        src/ModbusPDUFactory.cpp
-        src/ModbusPDUFactory.h
         src/ModbusUtilities.cpp
         src/ModbusUtilities.h)
 target_include_directories(MBLibrary PUBLIC src)

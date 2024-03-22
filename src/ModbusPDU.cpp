@@ -15,39 +15,30 @@ ModbusFunctionCode ModbusPDU::getFunctionCode() {
     return _functionCode;
 }
 
-std::vector<std::byte> ModbusPDU::buildResponse(const std::shared_ptr<ModbusDataArea> &modbusDataArea) {
+//TODO Fix this
+std::vector<std::byte> ModbusPDU::buildResponse(std::shared_ptr<ModbusDataArea> modbusDataArea) {
     switch (_functionCode) {
         case ModbusFunctionCode::ReadCoils:
             return getReadCoilsResponse(modbusDataArea);
+        case ModbusFunctionCode::ReadDiscreteInputs:
+            return {};
         default:
             //  Build exception response for invalid function code
             return buildExceptionResponse(_functionCode, ModbusExceptionCode::IllegalFunction);
     }
 }
 
-std::vector<std::byte> ModbusPDU::getReadCoilsResponse(const std::shared_ptr<ModbusDataArea> &modbusDataArea) {
+//TODO Fix this
+std::vector<std::byte> ModbusPDU::getReadCoilsResponse(ModbusDataArea modbusDataArea) {
     // Get the starting address and quantity of coils
     auto startingAddress = twoBytesToUint16(_data[0], _data[1]);
     auto quantityOfCoils = twoBytesToUint16(_data[3], _data[4]);
 
     try {
         // Get the coils from the data area
-        auto coils = modbusDataArea->getCoils(startingAddress, quantityOfCoils);
-        auto byteCount = calculateBytesFromBits(coils.size());
-
-        // Build the response
-        std::vector<std::byte> response(byteCount + 2);
-        auto functionCodeByte = static_cast<std::byte>(_functionCode);
-        auto byteCountFirstByte = static_cast<std::byte>((byteCount >> 8) & 0xFF);
-        auto byteCountSecondByte = static_cast<std::byte>(byteCount & 0xFF);
-        response[0] = functionCodeByte;
-        response[1] = byteCountFirstByte;
-        response[2] = byteCountSecondByte;
-        // Pack the coils into bytes
-        auto packedBits = packBooleanRegistersIntoBytes(coils);
-        // Copy the packed bits into the response
-        std::copy(packedBits.begin(), packedBits.end(), response.begin() + 3);
-        return response;
+        auto coils = modbusDataArea.getCoils(startingAddress, quantityOfCoils);
+        // Get the response
+        return buildResponseForBooleanRegisters(coils, startingAddress, quantityOfCoils);
     } catch (std::out_of_range &e) {
         // Build response for invalid address
         return buildExceptionResponse(_functionCode, ModbusExceptionCode::IllegalDataAddress);
