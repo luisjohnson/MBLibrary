@@ -14,20 +14,22 @@
 class ModbusPDU {
 
 public:
-    explicit ModbusPDU(std::vector<std::byte> _rawData);
+    explicit ModbusPDU(std::vector<std::byte> _rawData, std::shared_ptr<ModbusDataArea> modbusDataArea);
 
-    ModbusPDU(ModbusFunctionCode functionCode, std::vector<std::byte> data);
+    ModbusPDU(ModbusFunctionCode functionCode, std::vector<std::byte> data,
+              std::shared_ptr<ModbusDataArea> modbusDataArea);
 
     ModbusFunctionCode getFunctionCode();
 
-    std::vector<std::byte> buildResponse(std::shared_ptr<ModbusDataArea> modbusDataArea);
+    std::vector<std::byte> buildResponse();
 
 
 private:
     std::vector<std::byte> _data;
     ModbusFunctionCode _functionCode;
+    std::shared_ptr<ModbusDataArea> _modbusDataArea;
 
-    std::vector<std::byte> getReadCoilsResponse(ModbusDataArea &modbusDataArea);
+    std::vector<std::byte> getReadCoilsResponse();
 
     template<typename T>
     std::vector<std::byte>

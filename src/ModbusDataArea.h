@@ -7,7 +7,7 @@
 #ifndef MODBUSDATAAREA_H
 #define MODBUSDATAAREA_H
 
-class ModbusDataArea {
+class ModbusDataArea : public std::enable_shared_from_this<ModbusDataArea> {
 public:
     /**
      * @class ModbusDataArea
@@ -146,6 +146,19 @@ public:
      */
     std::vector<ModbusInputRegister> getInputRegisters(int start, int length);
 
+    /**
+     * @brief Retrieves a shared pointer to the ModbusDataArea object.
+     *
+     * This function returns a shared pointer to the ModbusDataArea object.
+     * The ModbusDataArea class represents a data area for storing Modbus registers and coils. It ensures thread-safety
+     * by using a shared mutex to control access to the data. Clients can use this function to obtain a shared pointer
+     * to the ModbusDataArea object and safely access its methods and members.
+     *
+     *
+     * @return std::shared_ptr<ModbusDataArea> A shared pointer to the ModbusDataArea object.
+     */
+    std::shared_ptr<ModbusDataArea> getShared();
+
 private:
 
     std::vector<ModbusCoil> _coils;
@@ -197,7 +210,7 @@ private:
      * @return std::vector<std::shared_ptr<T>> The vector containing all registers.
      */
     template<typename T>
-    std::vector<T> &getAllRegisters(std::vector<T>& registers) {
+    std::vector<T> &getAllRegisters(std::vector<T> &registers) {
         std::lock_guard<std::mutex> lock(_mutex);
         return registers;
     }

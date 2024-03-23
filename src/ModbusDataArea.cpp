@@ -52,3 +52,7 @@ std::vector<ModbusHoldingRegister> ModbusDataArea::getHoldingRegisters(int start
 std::vector<ModbusInputRegister> ModbusDataArea::getInputRegisters(int start, int length) {
     return getRegisters(_inputRegisters, start, length);
 }
+
+std::shared_ptr<ModbusDataArea> ModbusDataArea::getShared() {
+    return shared_from_this();
+}
