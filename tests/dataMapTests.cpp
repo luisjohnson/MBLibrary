@@ -4,7 +4,6 @@
 #include <gtest/gtest.h>
 #include "ModbusDataArea.h"
 
-
 TEST(ModbusDataAreaTest, InsertAndRetrieveCoil) {
     ModbusDataArea dataArea;
     ModbusCoil coil = ModbusCoil(1, true);
@@ -41,7 +40,8 @@ TEST(ModbusDataAreaTest, InsertAndRetrieveInputRegister) {
     dataArea.insertInputRegister(inputRegister);
     auto retrievedRegister = dataArea.getInputRegisters(10, 1).front();
     ASSERT_TRUE(retrievedRegister.getAddress() == 10);
-    ASSERT_TRUE(retrievedRegister.read() == 1000);}
+    ASSERT_TRUE(retrievedRegister.read() == 1000);
+}
 
 TEST(ModbusDataAreaTest, RetrieveNonExistentCoilThrowsException) {
     ModbusDataArea dataArea;
@@ -162,6 +162,22 @@ TEST(ModbusDataAreaTest, SortInputRegisters) {
     auto retrievedRegisters = dataArea.getAllInputRegisters();
     ASSERT_EQ(retrievedRegisters[0].getAddress(), 10);
     ASSERT_EQ(retrievedRegisters[1].getAddress(), 11);
+}
+
+TEST(ModbusDataAreaTest, InsertCoilThrowsExceptionWhenMaxCoilsExceeded) {
+    ModbusDataArea dataArea;
+    for (int i = 1; i < MAX_COILS + 1; i++) {
+        ASSERT_NO_THROW(dataArea.insertCoil(ModbusCoil(i, true)));
+    }
+    ASSERT_THROW(dataArea.insertCoil(ModbusCoil(2001, true)), std::range_error);
+}
+
+TEST(ModbusDataAreaTest, InsertInputRegisterThorwsExceptionWhenMaxInputRegistersExceeded) {
+    ModbusDataArea dataArea;
+    for (int i = 1; i < MAX_INPUT_REGISTERS + 1; i++) {
+        ASSERT_NO_THROW(dataArea.insertInputRegister(ModbusInputRegister(i, 1000)));
+    }
+    ASSERT_THROW(dataArea.insertInputRegister(ModbusInputRegister(2001, 1000)), std::range_error);
 }
 
 int main(int argc, char **argv) {

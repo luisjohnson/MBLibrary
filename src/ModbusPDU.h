@@ -12,7 +12,6 @@
 #include "ModbusDataArea.h"
 
 class ModbusPDU {
-
 public:
     explicit ModbusPDU(std::vector<std::byte> _rawData, std::shared_ptr<ModbusDataArea> modbusDataArea);
 
@@ -22,7 +21,6 @@ public:
     ModbusFunctionCode getFunctionCode();
 
     std::vector<std::byte> buildResponse();
-
 
 private:
     std::vector<std::byte> _data;
@@ -37,20 +35,15 @@ private:
         // Build the response
         auto byteCount = calculateBytesFromBits(booleanRegisters.size());
         auto functionCodeByte = static_cast<std::byte>(_functionCode);
-        std::vector<std::byte> response(byteCount + 2);
-        auto byteCountFirstByte = static_cast<std::byte>((byteCount >> 8) & 0xFF);
-        auto byteCountSecondByte = static_cast<std::byte>(byteCount & 0xFF);
+        std::vector<std::byte> response(byteCount + 3);
         response[0] = functionCodeByte;
-        response[1] = byteCountFirstByte;
-        response[2] = byteCountSecondByte;
+        response[1] = static_cast<std::byte>(byteCount);
         // Pack the coils into bytes
         auto packedBits = packBooleanRegistersIntoBytes(booleanRegisters);
         // Copy the packed bits into the response
-        std::copy(packedBits.begin(), packedBits.end(), response.begin() + 3);
+        std::copy(packedBits.begin(), packedBits.end(), response.begin() + 2);
         return response;
     }
-
-
 };
 
 std::vector<std::byte> buildExceptionResponse(ModbusFunctionCode functionCode, ModbusExceptionCode exceptionCode);

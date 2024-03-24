@@ -53,8 +53,8 @@ uint16_t twoBytesToUint16(std::byte msb, std::byte lsb) {
  */
 template<typename T>
 std::vector<std::byte> packBooleanRegistersIntoBytes(std::vector<T> &registers) {
-//    static_assert(std::is_same<T, ModbusCoil>::value || std::is_same<T, ModbusDiscreteInput>::value,
-//                  "packBooleanRegistersIntoBytes accept only objects of type ModbusCoil or ModbusDiscreteInput.");
+    static_assert(std::is_same<T, ModbusCoil>::value || std::is_same<T, ModbusDiscreteInput>::value,
+                  "packBooleanRegistersIntoBytes accept only objects of type ModbusCoil or ModbusDiscreteInput.");
     auto numberOfBits = registers.size();
     auto byteCount = calculateBytesFromBits(numberOfBits);
     std::vector<std::byte> bytes(byteCount);

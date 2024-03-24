@@ -7,6 +7,32 @@
 #ifndef MODBUSDATAAREA_H
 #define MODBUSDATAAREA_H
 
+constexpr int MAX_COILS = 2000; 
+constexpr int MAX_DISCRETE_INPUTS = 2000;
+constexpr int MAX_HOLDING_REGISTERS = 125;
+constexpr int MAX_INPUT_REGISTERS = 125;
+
+    /**
+     * @brief Represents a Modbus data area for storing Modbus registers and coils.
+     *
+     * The ModbusDataArea class provides a container for storing Modbus registers and coils. It ensures thread-safety by
+     * using a shared mutex to control access to the data. It also provides methods for inserting, retrieving, and modifying
+     * the registers and coils.
+     */
+
+/**
+     * @brief Retrieves a range of registers from the provided vector of registers.
+     *
+     * This function returns a vector containing a range of registers from the provided vector of registers, starting
+     * from the specified start index and with the specified length.
+     *
+     * @tparam T The type of register.
+     * @param registers The vector of registers to retrieve from.
+     * @param start The starting index of the range.
+     * @param length The length of the range.
+     * @return A vector containing the range of registers.
+     * @note It is the responsibility of the caller to ensure that the start index and length values are valid for the vector.
+     */
 class ModbusDataArea : public std::enable_shared_from_this<ModbusDataArea> {
 public:
     /**
@@ -215,36 +241,42 @@ private:
         return registers;
     }
 
+
+
     /**
-     * @brief Retrieves a range of registers from a given vector.
+     * @brief Retrieves a portion of registers from a vector.
      *
-     * This function allows to extract a range of registers from a provided vector
-     * of shared pointers with a specified starting position and length. The registers
-     * within the range are stored in the output vector, preserving their original order.
+     * This function retrieves a specified range of registers from a given vector. It modifies the `registers`
+     * vector and fills it with the requested registers.
      *
-     * @tparam T The type of the registers stored in the vector.
-     * @param registers The vector containing shared pointers to the registers.
-     * @param start The index indicating the starting position of the range.
-     * @param length The length of the range of registers to retrieve.
-     * @return None.
+     * @tparam T The data type of the registers.
+     * @param registers The vector to retrieve the registers from.
+     * @param start The starting index of the registers to retrieve.
+     * @param length The number of registers to retrieve.
      *
-     * @note If the starting position or length exceeds the size of the vector,
-     *       the function retrieves as many registers as possible without throwing an exception.
+     * @note The function assumes that the `registers` vector has at least `start + length` elements to avoid
+     * any out-of-bounds access. If the `registers` vector has fewer elements, the behavior is undefined.
+     *
+     * @return void
      */
     template<typename T>
     std::vector<T> getRegisters(std::vector<T> &registers, int start, int length) {
         std::lock_guard<std::mutex> lock(_mutex);
+        // Calculate the end index of the range
         int end = start + length - 1;
-
+        // Throwing an exception if the requested range is invalid
+        if (length > 2000 || length > registers.size())
+            throw std::out_of_range("Requested range is invalid");
+        // Find the start and end iterators for the requested range
         auto startIt = std::lower_bound(registers.begin(), registers.end(), start,
                                         [](const T &reg, int start) {
                                             return reg.getAddress() < start;
                                         });
-
         auto endIt = std::upper_bound(startIt, registers.end(), end,
                                       [](int end, const T &reg) {
                                           return end < reg.getAddress();
                                       });
+        // Throwing an exception if the requested range does not exist
         if (startIt == registers.end() || endIt == registers.begin())
             throw std::out_of_range("Requested range does not exist");
 

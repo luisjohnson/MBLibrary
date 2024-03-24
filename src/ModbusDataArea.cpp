@@ -6,18 +6,26 @@ ModbusDataArea::ModbusDataArea() : _coils(), _discreteInputs(), _holdingRegister
 }
 
 void ModbusDataArea::insertCoil(ModbusCoil coil) {
+    if (_coils.size() == MAX_COILS)
+        throw std::range_error("Maximum number of coils exceeded.");
     insertRegister(_coils, std::move(coil));
 }
 
 void ModbusDataArea::insertDiscreteInput(ModbusDiscreteInput input) {
+    if (_discreteInputs.size() == MAX_DISCRETE_INPUTS)
+        throw std::range_error("Maximum number of discrete inputs exceeded.");
     insertRegister(_discreteInputs, std::move(input));
 }
 
 void ModbusDataArea::insertHoldingRegister(ModbusHoldingRegister holdingRegister) {
+    if (_holdingRegisters.size() == MAX_HOLDING_REGISTERS)
+        throw std::range_error("Maximum number of holding registers exceeded.");
     insertRegister(_holdingRegisters, std::move(holdingRegister));
 }
 
 void ModbusDataArea::insertInputRegister(ModbusInputRegister inputRegister) {
+    if (_inputRegisters.size() == MAX_INPUT_REGISTERS)
+        throw std::range_error("Maximum number of input registers exceeded.");
     insertRegister(_inputRegisters, std::move(inputRegister));
 }
 
