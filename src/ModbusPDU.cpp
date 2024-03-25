@@ -32,10 +32,20 @@ std::vector<std::byte> ModbusPDU::buildResponse() {
     }
 }
 
+std::pair<uint16_t, uint16_t> ModbusPDU::getStartingAddressAndQuantityOfRegisters() {
+    auto startingAddress = twoBytesToUint16(_data[0], _data[1]);
+    auto quantityOfRegisters = twoBytesToUint16(_data[2], _data[3]);
+    return {startingAddress, quantityOfRegisters};
+}
+
+std::vector<std::byte> buildExceptionResponse(ModbusFunctionCode functionCode, ModbusExceptionCode exceptionCode) {
+    return {static_cast<std::byte>(0x80 + static_cast<uint8_t>(functionCode)), static_cast<std::byte>(exceptionCode)};
+}
+
+
 std::vector<std::byte> ModbusPDU::getReadCoilsResponse() {
     // Get the starting address and quantity of coils
-    auto startingAddress = twoBytesToUint16(_data[0], _data[1]);
-    auto quantityOfCoils = twoBytesToUint16(_data[2], _data[3]);
+    auto [startingAddress, quantityOfCoils] = getStartingAddressAndQuantityOfRegisters();
 
     try {
         // Get the coils from the data area
@@ -48,7 +58,40 @@ std::vector<std::byte> ModbusPDU::getReadCoilsResponse() {
     }
 }
 
+std::vector<std::byte> ModbusPDU::getReadDiscreteInputsResponse() {
+    auto [startingAddress, quantityOfCoils] = getStartingAddressAndQuantityOfRegisters();
 
-std::vector<std::byte> buildExceptionResponse(ModbusFunctionCode functionCode, ModbusExceptionCode exceptionCode) {
-    return {static_cast<std::byte>(0x80 + static_cast<uint8_t>(functionCode)), static_cast<std::byte>(exceptionCode)};
+    try {
+        // Get the coils from the data area
+        auto discreteInputs = _modbusDataArea->getDiscreteInputs(startingAddress, quantityOfCoils);
+        // Get the response
+        return buildResponseForBooleanRegisters(discreteInputs, startingAddress, quantityOfCoils);
+    } catch (std::out_of_range &e) {
+        // Build response for invalid address
+        return buildExceptionResponse(_functionCode, ModbusExceptionCode::IllegalDataAddress);
+    }
+}
+
+std::vector<std::byte> ModbusPDU::getReadHoldingRegistersResponse() {
+    return {};
+}
+
+std::vector<std::byte> ModbusPDU::getReadInputRegistersResponse() {
+    return {};
+}
+
+std::vector<std::byte> ModbusPDU::getWriteSingleCoilResponse() {
+    return {};
+}
+
+std::vector<std::byte> ModbusPDU::getWriteSingleRegisterResponse() {
+    return {};
+}
+
+std::vector<std::byte> ModbusPDU::getWriteMultipleCoilsResponse() {
+    return {};
+}
+
+std::vector<std::byte> ModbusPDU::getWriteMultipleRegistersResponse() {
+    return {};
 }

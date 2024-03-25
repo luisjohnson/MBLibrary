@@ -18,6 +18,7 @@ public:
     ModbusPDU(ModbusFunctionCode functionCode, std::vector<std::byte> data,
               std::shared_ptr<ModbusDataArea> modbusDataArea);
 
+
     ModbusFunctionCode getFunctionCode();
 
     std::vector<std::byte> buildResponse();
@@ -27,7 +28,24 @@ private:
     ModbusFunctionCode _functionCode;
     std::shared_ptr<ModbusDataArea> _modbusDataArea;
 
+    std::pair<uint16_t, uint16_t> getStartingAddressAndQuantityOfRegisters();
+
     std::vector<std::byte> getReadCoilsResponse();
+
+    std::vector<std::byte> getReadDiscreteInputsResponse();
+
+    std::vector<std::byte> getReadHoldingRegistersResponse();
+
+    std::vector<std::byte> getReadInputRegistersResponse();
+
+    std::vector<std::byte> getWriteSingleCoilResponse();
+
+    std::vector<std::byte> getWriteSingleRegisterResponse();
+
+    std::vector<std::byte> getWriteMultipleCoilsResponse();
+
+    std::vector<std::byte> getWriteMultipleRegistersResponse();
+
 
     template<typename T>
     std::vector<std::byte>
@@ -45,6 +63,7 @@ private:
         return response;
     }
 };
+
 
 std::vector<std::byte> buildExceptionResponse(ModbusFunctionCode functionCode, ModbusExceptionCode exceptionCode);
 

@@ -34,23 +34,23 @@
 *
 */
 enum class ModbusFunctionCode {
-    ReadDiscreteInputs = 0x02,
     ReadCoils = 0x01,
-    WriteSingleCoil = 0x05,
-    WriteMultipleCoils = 0x0F,
-    ReadInputRegister = 0x04,
+    ReadDiscreteInputs = 0x02,
     ReadHoldingRegisters = 0x03,
+    ReadInputRegister = 0x04,
+    WriteSingleCoil = 0x05,
     WriteSingleRegister = 0x06,
-    WriteMultipleRegisters = 0x10,
-    ReadWriteMultipleRegisters = 0x17,
-    ReadFifoQueue = 0x18,
-    ReadFileRecord = 0x14,
-    WriteFileRecord = 0x15,
     ReadExceptionStatus = 0x07,
     Diagnostic = 0x08,
+    WriteMultipleRegisters = 0x10,
+    ReportSlaveID = 0x11,
+    ReadFileRecord = 0x14,
+    WriteFileRecord = 0x15,
     GetComEventCounter = 0x0B,
     GetComEventLog = 0x0C,
-    ReportSlaveID = 0x11,
+    WriteMultipleCoils = 0x0F,
+    ReadWriteMultipleRegisters = 0x17,
+    ReadFifoQueue = 0x18,
     ReadDeviceIdentification = 0x2B
 };
 
