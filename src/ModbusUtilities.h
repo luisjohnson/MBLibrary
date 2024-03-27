@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <random>
 #include <Modbus.h>
 
 
@@ -30,6 +31,46 @@
  */
 uint16_t twoBytesToUint16(std::byte msb, std::byte lsb) {
     return (static_cast<uint16_t>(msb) << 8) | static_cast<uint16_t>(lsb);
+}
+
+
+/**
+ * @brief Generates a random boolean value.
+ *
+ * This function uses a random device as a source of entropy to seed
+ * the random number generator. It then generates a random integer
+ * between 0 and 1 using a uniform distribution and returns it as a
+ * boolean value.
+ *
+ * @return A random boolean value (true or false).
+ */
+bool generateRandomBoolean() {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distribution(0, 1);
+    return distribution(gen);
+}
+
+/**
+ * @brief Generates a random integer within a specified range.
+ *
+ * This function utilizes the C++ standard library's random number generation facilities to generate a random integer
+ * within a given range. By default, the range is from the minimum representable value of an int to the maximum
+ * representable value of an int, inclusive.
+ *
+ * @param min The lower bound of the range (default: INT_MIN).
+ * @param max The upper bound of the range (default: INT_MAX).
+ *
+ * @return A randomly generated integer within the specified range.
+ *
+ * @note The function automatically seeds the random number generator using std::random_device, guaranteeing that
+ *       each run produces a different sequence of random numbers.
+ */
+int generateRandomInteger(int min = INT_MIN, int max = INT_MAX) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distribution(min, max);
+    return distribution(gen);
 }
 
 /**
@@ -74,6 +115,27 @@ std::vector<std::byte> packBooleanRegistersIntoBytes(std::vector<T> &registers) 
     return bytes;
 }
 
+
+/**
+ * @brief Packs a vector of Modbus integer registers into a vector of bytes.
+ *
+ * This function takes a vector of Modbus integer registers and packs their values into
+ * a vector of bytes. It supports registers of type ModbusHoldingRegister and ModbusInputRegister.
+ * Each register is packed into two bytes, with the most significant byte first (big-endian).
+ *
+ * @tparam T The type of registers in the vector (should be ModbusHoldingRegister or ModbusInputRegister).
+ * @param registers The vector of registers to pack into bytes.
+ * @return A vector of bytes containing the packed values of the registers.
+ *
+ * @throws std::invalid_argument If the template parameter T is not ModbusHoldingRegister or ModbusInputRegister.
+ *
+ * @par Example
+ * @code{.cpp}
+ * std::vector<ModbusHoldingRegister> holdingRegisters = {ModbusHoldingRegister(0, 5000), ModbusHoldingRegister(1, 6000)};
+ * std::vector<std::byte> packedBytes = packIntegerRegistersIntoBytes(holdingRegisters);
+ * // packedBytes will contain {0x13, 0x88, 0x17, 0x70} (assuming the values of the registers are 5000 and 6000 respectively)
+ * @endcode
+ */
 template<typename T>
 std::vector<std::byte> packIntegerRegistersIntoBytes(std::vector<T> &registers) {
     static_assert(std::is_same<T, ModbusHoldingRegister>::value || std::is_same<T,

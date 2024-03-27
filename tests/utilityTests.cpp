@@ -135,6 +135,33 @@ TEST_F(UtilityTest, PackEmptyInputRegistersIntoBytesReturnsEmptyBytes) {
     EXPECT_TRUE(bytes.empty());
 }
 
+TEST_F(UtilityTest, GenerateRandomBooleanReturnsTrueOrFalse) {
+    bool result = generateRandomBoolean();
+    ASSERT_TRUE(result == true || result == false);
+}
+
+TEST_F(UtilityTest, GenerateRandomIntegerReturnsValueWithinRange) {
+    int min = 0;
+    int max = 100;
+    int result = generateRandomInteger(min, max);
+    ASSERT_GE(result, min);
+    ASSERT_LE(result, max);
+}
+
+TEST_F(UtilityTest, GenerateRandomIntegerReturnsValueWithinNegativeRange) {
+    int min = -100;
+    int max = -1;
+    int result = generateRandomInteger(min, max);
+    ASSERT_GE(result, min);
+    ASSERT_LE(result, max);
+}
+
+TEST_F(UtilityTest, GenerateRandomIntegerReturnsValueWithinFullRange) {
+    int result = generateRandomInteger();
+    ASSERT_GE(result, INT_MIN);
+    ASSERT_LE(result, INT_MAX);
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
