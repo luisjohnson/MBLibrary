@@ -54,7 +54,7 @@ uint16_t twoBytesToUint16(std::byte msb, std::byte lsb) {
 template<typename T>
 std::vector<std::byte> packBooleanRegistersIntoBytes(std::vector<T> &registers) {
     static_assert(std::is_same<T, ModbusCoil>::value || std::is_same<T, ModbusDiscreteInput>::value,
-                  "packBooleanRegistersIntoBytes accept only objects of type ModbusCoil or ModbusDiscreteInput.");
+                  "packBooleanRegistersIntoBytes accepts only objects of type ModbusCoil or ModbusDiscreteInput.");
     auto numberOfBits = registers.size();
     auto byteCount = calculateBytesFromBits(numberOfBits);
     std::vector<std::byte> bytes(byteCount);
@@ -73,5 +73,23 @@ std::vector<std::byte> packBooleanRegistersIntoBytes(std::vector<T> &registers) 
     }
     return bytes;
 }
+
+template<typename T>
+std::vector<std::byte> packIntegerRegistersIntoBytes(std::vector<T> &registers) {
+    static_assert(std::is_same<T, ModbusHoldingRegister>::value || std::is_same<T,
+                          ModbusInputRegister>::value,
+                  "packIntegerRegistersIntoBytes accepts only objects of type ModbusHoldingRegister "
+                  "or ModbusInputRegister.");
+//    auto byteCount = registers.size() * 2;
+    std::vector<std::byte> bytes;
+    for (auto &reg: registers) {
+        auto lsb = static_cast<std::byte>(reg.read() & 0xFF);
+        auto msb = static_cast<std::byte>((reg.read() >> 8) & 0xFF);
+        bytes.push_back(msb);
+        bytes.push_back(lsb);
+    }
+    return bytes;
+}
+
 
 #endif //MBLIBRARY_MODBUSUTILITIES_H

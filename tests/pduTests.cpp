@@ -222,6 +222,8 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidFuncti
     ASSERT_EQ(response[1], std::byte{0x01});
 }
 
+// TODO: Add tests for ReadHoldingRegisters and ReadInputRegisters
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

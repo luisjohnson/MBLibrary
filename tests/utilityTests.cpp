@@ -11,14 +11,21 @@ protected:
     std::byte lsb{};
     uint16_t expected{};
 
+    std::vector<ModbusHoldingRegister> holdingRegisters;
+    std::vector<ModbusInputRegister> inputRegisters;
+
+    std::vector<ModbusInputRegister> emptyInputRegisters{};
+    std::vector<ModbusHoldingRegister> emptyHoldingRegisters{};
+
     void SetUp() override {
-
-
         // Initialize the coils and discrete inputs
         for (int i = 0; i < 10; ++i) {
             coils.emplace_back(i, i % 2 == 0);
             discreteInputs.emplace_back(i, i % 2 == 0);
         }
+
+        holdingRegisters = {ModbusHoldingRegister(1, 0x1234), ModbusHoldingRegister(2, 0x5678)};
+        inputRegisters = {ModbusInputRegister(1, 0x9ABC), ModbusInputRegister(2, 0xDEF0)};
     }
 };
 
@@ -92,6 +99,41 @@ TEST_F(UtilityTest, packBooleanRegistersIntoBytes_EmptyVector) {
 //     // Check that the function throws a static_assert
 //     EXPECT_ANY_THROW(packBooleanRegistersIntoBytes(inputRegisters));
 // }
+
+TEST_F(UtilityTest, PackHoldingRegistersIntoBytesReturnsCorrectBytes) {
+    auto bytes = packIntegerRegistersIntoBytes(holdingRegisters);
+    // Check the bytes
+    EXPECT_EQ(bytes.size(), 4);
+    EXPECT_EQ(bytes[0], static_cast<std::byte>(0x12));
+    EXPECT_EQ(bytes[1], static_cast<std::byte>(0x34));
+    EXPECT_EQ(bytes[2], static_cast<std::byte>(0x56));
+    EXPECT_EQ(bytes[3], static_cast<std::byte>(0x78));
+
+}
+
+TEST_F(UtilityTest, PackInputRegistersIntoBytesReturnsCorrectBytes) {
+    auto bytes = packIntegerRegistersIntoBytes(inputRegisters);
+    // Check the bytes
+    EXPECT_EQ(bytes.size(), 4);
+    EXPECT_EQ(bytes[0], static_cast<std::byte>(0x9A));
+    EXPECT_EQ(bytes[1], static_cast<std::byte>(0xBC));
+    EXPECT_EQ(bytes[2], static_cast<std::byte>(0xDE));
+    EXPECT_EQ(bytes[3], static_cast<std::byte>(0xF0));
+}
+
+
+TEST_F(UtilityTest, PackEmptyHoldingRegistersIntoBytesReturnsEmptyBytes) {
+
+    auto bytes = packIntegerRegistersIntoBytes(emptyHoldingRegisters);
+    // Check the bytes
+    EXPECT_TRUE(bytes.empty());
+}
+
+TEST_F(UtilityTest, PackEmptyInputRegistersIntoBytesReturnsEmptyBytes) {
+    auto bytes = packIntegerRegistersIntoBytes(emptyInputRegisters);
+    // Check the bytes
+    EXPECT_TRUE(bytes.empty());
+}
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

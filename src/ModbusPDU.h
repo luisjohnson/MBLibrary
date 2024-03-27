@@ -62,6 +62,19 @@ private:
         std::copy(packedBits.begin(), packedBits.end(), response.begin() + 2);
         return response;
     }
+
+    template<typename T>
+    std::vector<std::byte>
+    buildResponseForIntegerRegisters(std::vector<T> &integerRegisters, int startingAddress, int quantityOfRegisters) {
+        //Build the response
+        auto byteCount = quantityOfRegisters*2;
+        auto functionCodeByte = static_cast<std::byte>(_functionCode);
+        std::vector<std::byte> response(byteCount + 2);
+        response[0] = functionCodeByte;
+        response[1] = static_cast<std::byte>(byteCount);
+
+        return response;
+    }
 };
 
 
