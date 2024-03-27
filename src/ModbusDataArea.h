@@ -3,36 +3,47 @@
 #include <mutex>
 #include <algorithm>
 #include "Modbus.h"
+#include "ModbusUtilities.h"
 
 #ifndef MODBUSDATAAREA_H
 #define MODBUSDATAAREA_H
 
-constexpr int MAX_COILS = 2000; 
+constexpr int MAX_COILS = 2000;
 constexpr int MAX_DISCRETE_INPUTS = 2000;
 constexpr int MAX_HOLDING_REGISTERS = 125;
 constexpr int MAX_INPUT_REGISTERS = 125;
 
-    /**
-     * @brief Represents a Modbus data area for storing Modbus registers and coils.
-     *
-     * The ModbusDataArea class provides a container for storing Modbus registers and coils. It ensures thread-safety by
-     * using a shared mutex to control access to the data. It also provides methods for inserting, retrieving, and modifying
-     * the registers and coils.
-     */
+/**
+ * @enum ValueGenerationType
+ * @brief Enumeration for different types of value generation.
+ *
+ * This enumeration defines the different types of value generation that can be used.
+ * The available types are:
+ *   - Random: Generate random values.
+ *   - Incremental: Generate values in incremental order.
+ *   - Decremental: Generate values in decremental order.
+ *   - Zeros: Generate values as zeros.
+ *   - Ones: Generate values as ones.
+ */
+enum class ValueGenerationType {
+    Random,
+    Incremental,
+    Decremental,
+    Zeros,
+    Ones
+};
 
 /**
-     * @brief Retrieves a range of registers from the provided vector of registers.
-     *
-     * This function returns a vector containing a range of registers from the provided vector of registers, starting
-     * from the specified start index and with the specified length.
-     *
-     * @tparam T The type of register.
-     * @param registers The vector of registers to retrieve from.
-     * @param start The starting index of the range.
-     * @param length The length of the range.
-     * @return A vector containing the range of registers.
-     * @note It is the responsibility of the caller to ensure that the start index and length values are valid for the vector.
-     */
+ * @brief Represents a Modbus data area for storing Modbus registers and coils.
+ *
+ * The ModbusDataArea class provides a container for storing Modbus registers and coils. It ensures thread-safety by
+ * using a shared mutex to control access to the data. It also provides methods for inserting, retrieving, and modifying
+ * the registers and coils.
+ */
+
+/**
+*
+*/
 class ModbusDataArea : public std::enable_shared_from_this<ModbusDataArea> {
 public:
     /**
@@ -75,13 +86,83 @@ public:
     void insertHoldingRegister(ModbusHoldingRegister holdingRegister);
 
     /**
-     * @brief Inserts a ModbusInputRegister into the collection.
+     * @brief Inserts a ModbusInputRegister into the data area.
      *
-     * This function inserts a ModbusInputRegister object into the collection.
+     * This function is used to insert a ModbusInputRegister into the data area.
+     * If the maximum number of input registers has been reached, a std::range_error
+     * exception will be thrown.
      *
-     * @param inputRegister The ModbusInputRegister object to be inserted.
+     * @param inputRegister The ModbusInputRegister to be inserted.
+     *
+     * @throws std::range_error Thrown if the maximum number of input registers has been exceeded.
      */
     void insertInputRegister(ModbusInputRegister inputRegister);
+
+    /**
+     * @brief Generates coils in the Modbus data area.
+     *
+     * This function generates coils in the Modbus data area starting from the specified address.
+     * The number of coils to be generated is determined by the count parameter. By default, the
+     * coils are generated using the ValueGenerationType::Zeros option, which sets all the coils to 0.
+     *
+     * @param startAddress The starting address for generating the coils.
+     * @param count The number of coils to be generated.
+     * @param type The type of value generation to be used, defaults to ValueGenerationType::Zeros.
+     *
+     * @see ModbusDataArea::generateBooleanRegisters()
+     */
+    void generateCoils(int startAddress, int count, ValueGenerationType type = ValueGenerationType::Zeros);
+
+    /**
+     * @brief Generates discrete inputs in a Modbus data area.
+     *
+     * This function generates a specified number of discrete inputs in a Modbus data area,
+     * starting from a specified address. The generated values are based on the specified value generation type.
+     *
+     * @param startAddress The start address of the discrete inputs.
+     * @param count The number of discrete inputs to generate.
+     * @param type The value generation type. Default is ValueGenerationType::Zeros.
+     *
+     * @details The generated discrete inputs are stored in the '_discreteInputs' member variable of the ModbusDataArea class.
+     * The generated values are based on the specified value generation type, which can be one of the following:
+     * - ValueGenerationType::Zeros: All generated values are set to zero.
+     * - ValueGenerationType::Ones: All generated values are set to one.
+     * - ValueGenerationType::Random: All generated values are randomly set to zero or one.
+     *
+     * @see ModbusDataArea::generateBooleanRegisters
+     */
+    void generateDiscreteInputs(int startAddress, int count, ValueGenerationType type = ValueGenerationType::Zeros);
+
+    /**
+     * @brief Generate holding registers with specified starting address, count, and value generation type.
+     *
+     * This function generates holding registers in the specified Modbus data area starting from the given
+     * start address. The number of registers to generate is determined by the count parameter. The value
+     * generation type can be optionally specified. By default, the generated registers will be filled with zeros.
+     *
+     * @param startAddress The starting address of the holding registers to be generated.
+     * @param count The number of holding registers to generate.
+     * @param type The value generation type (optional). Defaults to ValueGenerationType::Zeros.
+     *
+     * @sa ModbusDataArea::generateHoldingRegisters
+     */
+    void generateHoldingRegisters(int startAddress, int count, ValueGenerationType type = ValueGenerationType::Zeros);
+
+    /**
+     * @brief Generates input registers for Modbus data area.
+     *
+     * This function generates input registers with specified start address, count, and value generation type.
+     * The generated input registers will be stored in the _inputRegisters array of the Modbus data area.
+     *
+     * @param startAddress The starting address of the input registers.
+     * @param count The number of input registers to generate.
+     * @param type The value generation type. It has a default value of ValueGenerationType::Zeros.
+     *             Possible value generation types are:
+     *             - ValueGenerationType::Zeros: Generates input registers with all zeros.
+     *             - ValueGenerationType::Random: Generates input registers with random values.
+     *             - ValueGenerationType::Incremental: Generates input registers with incremental values starting from the startAddress.
+     */
+    void generateInputRegisters(int startAddress, int count, ValueGenerationType type = ValueGenerationType::Zeros);
 
     /**
      * @defgroup Coils Coils
@@ -185,6 +266,7 @@ public:
      */
     std::shared_ptr<ModbusDataArea> getShared();
 
+
 private:
 
     std::vector<ModbusCoil> _coils;
@@ -242,7 +324,6 @@ private:
     }
 
 
-
     /**
      * @brief Retrieves a portion of registers from a vector.
      *
@@ -281,6 +362,122 @@ private:
             throw std::out_of_range("Requested range does not exist");
 
         return {startIt, endIt};
+    }
+
+
+    /**
+     * @brief Generates a series of boolean registers of type `ModbusCoil` or `ModbusDiscreteInput` based on the specified value generation type.
+     *
+     * @tparam T The type of register (ModbusCoil or ModbusDiscreteInput).
+     * @param registers The vector of registers to store the generated registers.
+     * @param startAddress The starting address for the generated registers.
+     * @param count The number of registers to generate.
+     * @param type The value generation type.
+     *
+     * @throws std::invalid_argument if an invalid value generation type is provided.
+     *
+     * This function generates boolean registers of the specified type (`ModbusCoil` or `ModbusDiscreteInput`) and inserts them into the provided vector `registers`.
+     * The generation of the registers depends on the specified value generation type. Supported value generation types are Zeros, Ones, and Random.
+     *
+     * If the value generation type is Zeros, the function generates registers with a value of `false` and inserts them into the vector `registers`.
+     * If the value generation type is Ones, the function generates registers with a value of `true` and inserts them into the vector `registers`.
+     * If the value generation type is Random, the function generates registers with a random boolean value and inserts them into the vector `registers`.
+     *
+     * @note The function is thread-safe and uses a mutex to synchronize access to the vector `registers`.
+     *
+     * Example usage:
+     *
+     * ```cpp
+     * std::vector<ModbusCoil> registers;
+     * generateBooleanRegisters(registers, 1000, 10, ValueGenerationType::Random);
+     * ```
+     */
+    template<typename T>
+    void generateBooleanRegisters(std::vector<T> &registers, int startAddress, int count, ValueGenerationType type) {
+        static_assert(std::is_same<T, ModbusCoil>::value || std::is_same<T, ModbusDiscreteInput>::value,
+                      "Invalid register type, register type must be ModbusCoil or ModbusDiscreteInput.");
+        std::lock_guard<std::mutex> lock(_mutex);
+        switch (type) {
+            case ValueGenerationType::Zeros:
+                for (int i = 0; i < count; i++) {
+                    insertRegister(registers, T(startAddress + i, false));
+                }
+                break;
+            case ValueGenerationType::Ones:
+                for (int i = 0; i < count; i++) {
+                    insertRegister(registers, T(startAddress + i, true));
+                }
+                break;
+            case ValueGenerationType::Random:
+                for (int i = 0; i < count; i++) {
+                    insertRegister(registers, T(startAddress + i, generateRandomBoolean()));
+                }
+                break;
+            case ValueGenerationType::Decremental:
+            case ValueGenerationType::Incremental:
+            default:
+                throw std::invalid_argument("Invalid value generation type.");
+        }
+    }
+
+
+    /**
+     * \brief Generates integer registers based on the given parameters.
+     *
+     * \tparam T - The type of the registers.
+     * \param registers - The vector of registers to generate.
+     * \param startAddress - The starting address of the registers.
+     * \param count - The number of registers to generate.
+     * \param type - The value generation type.
+     *
+     * This function generates integer registers based on the given parameters.
+     * The registers are inserted into the provided vector.
+     *
+     * Possible value generation types are:
+     * - Zeros: generates registers with value 0.
+     * - Ones: generates registers with value 1.
+     * - Random: generates registers with random integer values.
+     * - Decremental: generates registers with values in decremental order (from count to 1).
+     * - Incremental: generates registers with values in incremental order (from 0 to count-1).
+     *
+     * \throws std::invalid_argument if an invalid value generation type is provided.
+     * \throws std::invalid_argument if an invalid register type is provided (must be ModbusHoldingRegister or ModbusInputRegister).
+     */
+    template<typename T>
+    void generateIntegerRegisters(std::vector<T> &registers, int startAddress, int count, ValueGenerationType type) {
+        static_assert(std::is_same<T, ModbusHoldingRegister>::value || std::is_same<T, ModbusInputRegister>::value,
+                      "Invalid register type, register type must be ModbusHoldingRegister or ModbusInputRegister.");
+        std::lock_guard<std::mutex> lock(_mutex);
+        switch (type) {
+            case ValueGenerationType::Zeros:
+                for (int i = 0; i < count; i++) {
+                    insertRegister(registers, T(startAddress + i, 0));
+                }
+                break;
+            case ValueGenerationType::Ones:
+                for (int i = 0; i < count; i++) {
+                    insertRegister(registers, T(startAddress + i, 1));
+                }
+                break;
+            case ValueGenerationType::Random:
+                for (int i = 0; i < count; i++) {
+                    insertRegister(registers, T(startAddress + i, generateRandomInteger()));
+                }
+                break;
+            case ValueGenerationType::Decremental:
+                for (int i = 0; i < count; i++) {
+                    insertRegister(registers, T(startAddress + i, count - i));
+                }
+                break;
+            case ValueGenerationType::Incremental:
+                for (int i = 0; i < count; i++) {
+                    insertRegister(registers, T(startAddress + i, i));
+                }
+                break;
+            default:
+                throw std::invalid_argument("Invalid value generation type.");
+        }
+
     }
 };
 

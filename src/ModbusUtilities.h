@@ -29,7 +29,7 @@
  * @param lsb The least significant byte.
  * @return The combined 16-bit unsigned integer.
  */
-uint16_t twoBytesToUint16(std::byte msb, std::byte lsb) {
+inline uint16_t twoBytesToUint16(std::byte msb, std::byte lsb) {
     return (static_cast<uint16_t>(msb) << 8) | static_cast<uint16_t>(lsb);
 }
 
@@ -44,7 +44,7 @@ uint16_t twoBytesToUint16(std::byte msb, std::byte lsb) {
  *
  * @return A random boolean value (true or false).
  */
-bool generateRandomBoolean() {
+inline bool generateRandomBoolean() {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distribution(0, 1);
@@ -66,7 +66,7 @@ bool generateRandomBoolean() {
  * @note The function automatically seeds the random number generator using std::random_device, guaranteeing that
  *       each run produces a different sequence of random numbers.
  */
-int generateRandomInteger(int min = INT_MIN, int max = INT_MAX) {
+inline int generateRandomInteger(int min = INT_MIN, int max = INT_MAX) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distribution(min, max);

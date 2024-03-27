@@ -4,6 +4,16 @@
 #include <gtest/gtest.h>
 #include "ModbusDataArea.h"
 
+class ModbusDataAreaTestWithFixture : public ::testing::Test {
+protected:
+    std::shared_ptr<ModbusDataArea> modbusDataArea;
+
+    void SetUp() override {
+        modbusDataArea = std::make_shared<ModbusDataArea>();
+    }
+};
+
+
 TEST(ModbusDataAreaTest, InsertAndRetrieveCoil) {
     ModbusDataArea dataArea;
     ModbusCoil coil = ModbusCoil(1, true);
@@ -178,6 +188,57 @@ TEST(ModbusDataAreaTest, InsertInputRegisterThorwsExceptionWhenMaxInputRegisters
         ASSERT_NO_THROW(dataArea.insertInputRegister(ModbusInputRegister(i, 1000)));
     }
     ASSERT_THROW(dataArea.insertInputRegister(ModbusInputRegister(2001, 1000)), std::range_error);
+}
+
+// TODO Fix fixture tests. They are getting frozen.
+TEST_F(ModbusDataAreaTestWithFixture, generateCoilsWithZeros) {
+    modbusDataArea->generateCoils(0, 10, ValueGenerationType::Zeros);
+    auto coils = modbusDataArea->getCoils(0, 10);
+    for (ModbusCoil coil : coils) {
+        EXPECT_EQ(coil.read(), false);
+    }
+}
+
+TEST_F(ModbusDataAreaTestWithFixture, generateDiscreteInputsWithOnes) {
+    modbusDataArea->generateDiscreteInputs(0, 10, ValueGenerationType::Ones);
+    auto inputs = modbusDataArea->getDiscreteInputs(0, 10);
+    for (ModbusDiscreteInput input : inputs) {
+        EXPECT_EQ(input.read(), true);
+    }
+}
+
+TEST_F(ModbusDataAreaTestWithFixture, generateHoldingRegistersWithRandomValues) {
+    modbusDataArea->generateHoldingRegisters(0, 10, ValueGenerationType::Random);
+    auto registers = modbusDataArea->getHoldingRegisters(0, 10);
+    int previousValue = registers[0].read();
+    for (int i = 1; i < registers.size(); i++) {
+        EXPECT_NE(registers[i].read(), previousValue);
+        previousValue = registers[i].read();
+    }
+}
+
+TEST_F(ModbusDataAreaTestWithFixture, generateInputRegistersWithIncrementalValues) {
+    modbusDataArea->generateInputRegisters(0, 10, ValueGenerationType::Incremental);
+    auto registers = modbusDataArea->getInputRegisters(0, 10);
+    for (int i = 0; i < registers.size(); i++) {
+        EXPECT_EQ(registers[i].read(), i);
+    }
+}
+
+TEST_F(ModbusDataAreaTestWithFixture, generateCoilsWithInvalidCount) {
+    EXPECT_THROW(modbusDataArea->generateCoils(0, 2001, ValueGenerationType::Zeros), std::out_of_range);
+}
+
+TEST_F(ModbusDataAreaTestWithFixture, generateDiscreteInputsWithInvalidCount) {
+    EXPECT_THROW(modbusDataArea->generateDiscreteInputs(0, 2001, ValueGenerationType::Zeros), std::out_of_range);
+}
+
+TEST_F(ModbusDataAreaTestWithFixture, generateHoldingRegistersWithInvalidCount) {
+    EXPECT_THROW(modbusDataArea->generateHoldingRegisters(0, 126, ValueGenerationType::Zeros), std::out_of_range);
+}
+
+TEST_F(ModbusDataAreaTestWithFixture, generateInputRegistersWithInvalidCount) {
+    EXPECT_THROW(modbusDataArea->generateInputRegisters(0, 126, ValueGenerationType::Zeros), std::out_of_range);
 }
 
 int main(int argc, char **argv) {
