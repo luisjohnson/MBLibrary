@@ -28,6 +28,7 @@ TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsCorrectData) {
 
     auto response = pdu.buildResponse();
 
+    ASSERT_EQ(response.size(), 4);
     ASSERT_EQ(response[0], std::byte{0x01});
     ASSERT_EQ(response[1], std::byte{0x02});
     ASSERT_EQ(response[2], std::byte{0b10101010});
@@ -41,6 +42,7 @@ TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsCorrectDataForOddNumberOfCoils) {
 
     auto response = pdu.buildResponse();
 
+    ASSERT_EQ(response.size(), 3);
     ASSERT_EQ(response[0], std::byte{0x01});
     ASSERT_EQ(response[1], std::byte{0x01});
     ASSERT_EQ(response[2], std::byte{0b00001010});
@@ -53,6 +55,7 @@ TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsCorrectDataForSingleCoil) {
 
     auto response = pdu.buildResponse();
 
+    ASSERT_EQ(response.size(), 3);
     ASSERT_EQ(response[0], std::byte{0x01});
     ASSERT_EQ(response[1], std::byte{0x01});
     ASSERT_EQ(response[2], std::byte{0b00000000});
@@ -65,6 +68,7 @@ TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsExceptionForInvalidAddress) {
 
     auto response = pdu.buildResponse();
 
+    ASSERT_EQ(response.size(), 2);
     ASSERT_EQ(response[0], std::byte{0x81});
     ASSERT_EQ(response[1], std::byte{0x02});
 }
@@ -76,6 +80,7 @@ TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsExceptionForInvalidQuantity) {
 
     auto response = pdu.buildResponse();
 
+    ASSERT_EQ(response.size(), 2);
     ASSERT_EQ(response[0], std::byte{0x81});
     ASSERT_EQ(response[1], std::byte{0x02});
 }
@@ -87,6 +92,7 @@ TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsExceptionForRangeExceedingMax) {
 
     auto response = pdu.buildResponse();
 
+    ASSERT_EQ(response.size(), 2);
     ASSERT_EQ(response[0], std::byte{0x81});
     ASSERT_EQ(response[1], std::byte{0x02});
 }
@@ -103,6 +109,7 @@ TEST_F(ModbusPDUTest, ReadCoilsCorrectDataForMaxRegisters) {
 
     auto response = pdu.buildResponse();
 
+    ASSERT_EQ(response.size(), 252);
     ASSERT_EQ(response[0], std::byte{0x01});
     ASSERT_EQ(response[1], std::byte{0xFA});
 }
@@ -116,6 +123,7 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsCorrectData) {
 
     auto response = pdu.buildResponse();
 
+    ASSERT_EQ(response.size(), 4);
     ASSERT_EQ(response[0], std::byte{0x02});
     ASSERT_EQ(response[1], std::byte{0x02});
     ASSERT_EQ(response[2], std::byte{0b10101010});
@@ -129,6 +137,7 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsCorrectDataForOddNumberOf
 
     auto response = pdu.buildResponse();
 
+    ASSERT_EQ(response.size(), 3);
     ASSERT_EQ(response[0], std::byte{0x02});
     ASSERT_EQ(response[1], std::byte{0x01});
     ASSERT_EQ(response[2], std::byte{0b00001010});
@@ -141,6 +150,7 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsCorrectDataForSingleCoil)
 
     auto response = pdu.buildResponse();
 
+    ASSERT_EQ(response.size(), 3);
     ASSERT_EQ(response[0], std::byte{0x02});
     ASSERT_EQ(response[1], std::byte{0x01});
     ASSERT_EQ(response[2], std::byte{0b00000000});
@@ -153,7 +163,8 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidAddres
 
     auto response = pdu.buildResponse();
 
-    ASSERT_EQ(response[0], std::byte{0x81});
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte{0x82});
     ASSERT_EQ(response[1], std::byte{0x02});
 }
 
@@ -164,7 +175,8 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidQuanti
 
     auto response = pdu.buildResponse();
 
-    ASSERT_EQ(response[0], std::byte{0x81});
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte{0x82});
     ASSERT_EQ(response[1], std::byte{0x02});
 }
 
@@ -175,7 +187,8 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForRangeExceedin
 
     auto response = pdu.buildResponse();
 
-    ASSERT_EQ(response[0], std::byte{0x81});
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte{0x82});
     ASSERT_EQ(response[1], std::byte{0x02});
 }
 
@@ -183,7 +196,7 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsCorrectDataForMaxRegisters) {
 
     while (modbusDataArea->getAllDiscreteInputs().size() < 2000) {
         int prevAddress = modbusDataArea->getAllDiscreteInputs().back().getAddress();
-        modbusDataArea->insertCoil(ModbusCoil(prevAddress + 1, true));
+        modbusDataArea->insertDiscreteInput(ModbusDiscreteInput(prevAddress + 1, true));
     }
 
     ModbusPDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD0}},
@@ -191,6 +204,7 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsCorrectDataForMaxRegisters) {
 
     auto response = pdu.buildResponse();
 
+    ASSERT_EQ(response.size(), 252);
     ASSERT_EQ(response[0], std::byte{0x02});
     ASSERT_EQ(response[1], std::byte{0xFA});
 }
@@ -203,6 +217,7 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidFuncti
 
     auto response = pdu.buildResponse();
 
+    ASSERT_EQ(response.size(), 2);
     ASSERT_EQ(response[0], std::byte{0x80 + 0x2C});
     ASSERT_EQ(response[1], std::byte{0x01});
 }

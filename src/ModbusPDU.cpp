@@ -25,7 +25,7 @@ std::vector<std::byte> ModbusPDU::buildResponse() {
         case ModbusFunctionCode::ReadCoils:
             return getReadCoilsResponse();
         case ModbusFunctionCode::ReadDiscreteInputs:
-            return {};
+            return getReadDiscreteInputsResponse();
         default:
             //  Build exception response for invalid function code
             return buildExceptionResponse(_functionCode, ModbusExceptionCode::IllegalFunction);

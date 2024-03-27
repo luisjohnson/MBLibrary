@@ -53,7 +53,7 @@ private:
         // Build the response
         auto byteCount = calculateBytesFromBits(booleanRegisters.size());
         auto functionCodeByte = static_cast<std::byte>(_functionCode);
-        std::vector<std::byte> response(byteCount + 3);
+        std::vector<std::byte> response(byteCount + 2);
         response[0] = functionCodeByte;
         response[1] = static_cast<std::byte>(byteCount);
         // Pack the coils into bytes
