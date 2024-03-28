@@ -410,7 +410,7 @@ private:
                 break;
             case ValueGenerationType::Random:
                 for (int i = 0; i < count; i++) {
-                    insertRegister(registers, T(startAddress + i, generateRandomBoolean()));
+                    insertRegister(registers, T(startAddress + i, Modbus::Utilities::generateRandomBoolean()));
                 }
                 break;
             case ValueGenerationType::Decremental:
@@ -461,7 +461,7 @@ private:
                 break;
             case ValueGenerationType::Random:
                 for (int i = 0; i < count; i++) {
-                    insertRegister(registers, T(startAddress + i, generateRandomInteger()));
+                    insertRegister(registers, T(startAddress + i, Modbus::Utilities::generateRandomInteger()));
                 }
                 break;
             case ValueGenerationType::Decremental:

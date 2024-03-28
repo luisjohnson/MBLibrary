@@ -1,6 +1,5 @@
 #include "Modbus.h"
 #include "ModbusPDU.h"
-#include "ModbusUtilities.h"
 
 
 ModbusPDU::ModbusPDU(std::vector<std::byte> rawData, std::shared_ptr<ModbusDataArea> modbusDataArea)
@@ -44,8 +43,8 @@ std::vector<std::byte> ModbusPDU::buildResponse() {
 }
 
 std::pair<uint16_t, uint16_t> ModbusPDU::getStartingAddressAndQuantityOfRegisters() {
-    auto startingAddress = twoBytesToUint16(_data[0], _data[1]);
-    auto quantityOfRegisters = twoBytesToUint16(_data[2], _data[3]);
+    auto startingAddress = Modbus::Utilities::twoBytesToUint16(_data[0], _data[1]);
+    auto quantityOfRegisters = Modbus::Utilities::twoBytesToUint16(_data[2], _data[3]);
     return {startingAddress, quantityOfRegisters};
 }
 
@@ -113,8 +112,8 @@ std::vector<std::byte> ModbusPDU::getReadInputRegistersResponse() {
 }
 
 std::vector<std::byte> ModbusPDU::getWriteSingleCoilResponse() {
-    int address = twoBytesToUint16(_data[1], _data[2]);
-    int value = twoBytesToUint16(_data[3], _data[4]);
+    int address = Modbus::Utilities::twoBytesToUint16(_data[1], _data[2]);
+    int value = Modbus::Utilities::twoBytesToUint16(_data[3], _data[4]);
     bool coilValue = (value == 0xFF00);
 
     if (value != 0xFF00 && value != 0x0000) {
@@ -173,7 +172,7 @@ std::vector<std::byte> ModbusPDU::getWriteMultipleRegistersResponse() {
     try {
         auto holdingRegisters = _modbusDataArea->getHoldingRegisters(startingAddress, quantityOfRegisters);
         for (int i = 0; i < quantityOfRegisters; ++i) {
-            auto value = twoBytesToUint16(_data[7 + i * 2], _data[8 + i * 2]);
+            auto value = Modbus::Utilities::twoBytesToUint16(_data[7 + i * 2], _data[8 + i * 2]);
             holdingRegisters[i].write(value);
         }
         return {_data[0], _data[1], _data[2], _data[3], _data[4]};

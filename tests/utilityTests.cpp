@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <ModbusUtilities.h>
 
+
 class UtilityTest : public ::testing::Test {
 
 protected:
@@ -29,41 +30,8 @@ protected:
     }
 };
 
-
-TEST_F(UtilityTest, TestNormalValues) {
-    msb = std::byte(0xAB);
-    lsb = std::byte(0xCD);
-    expected = 0xABCD;
-
-    ASSERT_EQ(twoBytesToUint16(msb, lsb), expected);
-}
-
-TEST_F(UtilityTest, TestMaximumValues) {
-    msb = std::byte(0xFF);
-    lsb = std::byte(0xFF);
-    expected = 0xFFFF;
-
-    ASSERT_EQ(twoBytesToUint16(msb, lsb), expected);
-}
-
-TEST_F(UtilityTest, TestMinimumValues) {
-    msb = std::byte(0x00);
-    lsb = std::byte(0x00);
-    expected = 0x0000;
-
-    ASSERT_EQ(twoBytesToUint16(msb, lsb), expected);
-}
-
-TEST_F(UtilityTest, TestRandomValues) {
-    msb = std::byte(0x1F);
-    lsb = std::byte(0x3E);
-    expected = 0x1F3E;
-
-    ASSERT_EQ(twoBytesToUint16(msb, lsb), expected);
-}
-
 TEST_F(UtilityTest, packBooleanRegistersIntoBytes_Coils) {
-    auto packedCoils = packBooleanRegistersIntoBytes(coils);
+    auto packedCoils = Modbus::Utilities::packBooleanRegistersIntoBytes(coils);
 
     // Check the size of the packed coils
     EXPECT_EQ(packedCoils.size(), 2);
@@ -74,7 +42,7 @@ TEST_F(UtilityTest, packBooleanRegistersIntoBytes_Coils) {
 }
 
 TEST_F(UtilityTest, packBooleanRegistersIntoBytes_DiscreteInputs) {
-    auto packedDiscreteInputs = packBooleanRegistersIntoBytes(discreteInputs);
+    auto packedDiscreteInputs = Modbus::Utilities::packBooleanRegistersIntoBytes(discreteInputs);
 
     // Check the size of the packed discrete inputs
     EXPECT_EQ(packedDiscreteInputs.size(), 2);
@@ -86,13 +54,13 @@ TEST_F(UtilityTest, packBooleanRegistersIntoBytes_DiscreteInputs) {
 
 TEST_F(UtilityTest, packBooleanRegistersIntoBytes_EmptyVector) {
     std::vector<ModbusCoil> emptyCoils;
-    auto packedCoils = packBooleanRegistersIntoBytes(emptyCoils);
+    auto packedCoils = Modbus::Utilities::packBooleanRegistersIntoBytes(emptyCoils);
 
     // Check the size of the packed coils
     EXPECT_TRUE(packedCoils.empty());
 }
 
-// TEST(ModbusTest, packBooleanRegistersIntoBytes_WrongType) {
+// TEST(UtilityTest, packBooleanRegistersIntoBytes_WrongType) {
 //     std::vector<std::shared_ptr<ModbusInputRegister>> inputRegisters;
 //     inputRegisters.push_back(std::make_shared<ModbusInputRegister>(1, 1000));
 //
@@ -101,7 +69,7 @@ TEST_F(UtilityTest, packBooleanRegistersIntoBytes_EmptyVector) {
 // }
 
 TEST_F(UtilityTest, PackHoldingRegistersIntoBytesReturnsCorrectBytes) {
-    auto bytes = packIntegerRegistersIntoBytes(holdingRegisters);
+    auto bytes = Modbus::Utilities::packIntegerRegistersIntoBytes(holdingRegisters);
     // Check the bytes
     EXPECT_EQ(bytes.size(), 4);
     EXPECT_EQ(bytes[0], static_cast<std::byte>(0x12));
@@ -112,7 +80,7 @@ TEST_F(UtilityTest, PackHoldingRegistersIntoBytesReturnsCorrectBytes) {
 }
 
 TEST_F(UtilityTest, PackInputRegistersIntoBytesReturnsCorrectBytes) {
-    auto bytes = packIntegerRegistersIntoBytes(inputRegisters);
+    auto bytes = Modbus::Utilities::packIntegerRegistersIntoBytes(inputRegisters);
     // Check the bytes
     EXPECT_EQ(bytes.size(), 4);
     EXPECT_EQ(bytes[0], static_cast<std::byte>(0x9A));
@@ -124,26 +92,58 @@ TEST_F(UtilityTest, PackInputRegistersIntoBytesReturnsCorrectBytes) {
 
 TEST_F(UtilityTest, PackEmptyHoldingRegistersIntoBytesReturnsEmptyBytes) {
 
-    auto bytes = packIntegerRegistersIntoBytes(emptyHoldingRegisters);
+    auto bytes = Modbus::Utilities::packIntegerRegistersIntoBytes(emptyHoldingRegisters);
     // Check the bytes
     EXPECT_TRUE(bytes.empty());
 }
 
 TEST_F(UtilityTest, PackEmptyInputRegistersIntoBytesReturnsEmptyBytes) {
-    auto bytes = packIntegerRegistersIntoBytes(emptyInputRegisters);
+    auto bytes = Modbus::Utilities::packIntegerRegistersIntoBytes(emptyInputRegisters);
     // Check the bytes
     EXPECT_TRUE(bytes.empty());
 }
 
+TEST_F(UtilityTest, TestNormalValues) {
+    msb = std::byte(0xAB);
+    lsb = std::byte(0xCD);
+    expected = 0xABCD;
+
+    ASSERT_EQ(Modbus::Utilities::twoBytesToUint16(msb, lsb), expected);
+}
+
+TEST_F(UtilityTest, TestMaximumValues) {
+    msb = std::byte(0xFF);
+    lsb = std::byte(0xFF);
+    expected = 0xFFFF;
+
+    ASSERT_EQ(Modbus::Utilities::twoBytesToUint16(msb, lsb), expected);
+}
+
+TEST_F(UtilityTest, TestMinimumValues) {
+    msb = std::byte(0x00);
+    lsb = std::byte(0x00);
+    expected = 0x0000;
+
+    ASSERT_EQ(Modbus::Utilities::twoBytesToUint16(msb, lsb), expected);
+}
+
+TEST_F(UtilityTest, TestRandomValues) {
+    msb = std::byte(0x1F);
+    lsb = std::byte(0x3E);
+    expected = 0x1F3E;
+
+    ASSERT_EQ(Modbus::Utilities::twoBytesToUint16(msb, lsb), expected);
+}
+
 TEST_F(UtilityTest, GenerateRandomBooleanReturnsTrueOrFalse) {
-    bool result = generateRandomBoolean();
+    bool result = Modbus::Utilities::generateRandomBoolean();
     ASSERT_TRUE(result == true || result == false);
 }
 
 TEST_F(UtilityTest, GenerateRandomIntegerReturnsValueWithinRange) {
     int min = 0;
     int max = 100;
-    int result = generateRandomInteger(min, max);
+    int result = Modbus::Utilities::generateRandomInteger(min, max);
     ASSERT_GE(result, min);
     ASSERT_LE(result, max);
 }
@@ -151,13 +151,13 @@ TEST_F(UtilityTest, GenerateRandomIntegerReturnsValueWithinRange) {
 TEST_F(UtilityTest, GenerateRandomIntegerReturnsValueWithinNegativeRange) {
     int min = -100;
     int max = -1;
-    int result = generateRandomInteger(min, max);
+    int result = Modbus::Utilities::generateRandomInteger(min, max);
     ASSERT_GE(result, min);
     ASSERT_LE(result, max);
 }
 
 TEST_F(UtilityTest, GenerateRandomIntegerReturnsValueWithinFullRange) {
-    int result = generateRandomInteger();
+    int result = Modbus::Utilities::generateRandomInteger();
     ASSERT_GE(result, INT_MIN);
     ASSERT_LE(result, INT_MAX);
 }

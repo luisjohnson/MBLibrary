@@ -8,10 +8,27 @@
 
 class ModbusPDUTest : public ::testing::Test {
 protected:
+    std::vector<ModbusCoil> coils;
+    std::vector<ModbusDiscreteInput> discreteInputs;
+    std::vector<ModbusHoldingRegister> holdingRegisters;
+    std::vector<ModbusInputRegister> inputRegisters;
 
+    std::vector<ModbusInputRegister> emptyInputRegisters{};
+    std::vector<ModbusHoldingRegister> emptyHoldingRegisters{};
     std::shared_ptr<ModbusDataArea> modbusDataArea = std::make_shared<ModbusDataArea>();
 
     void SetUp() override {
+
+        // Initialize the coils and discrete inputs
+        for (int i = 0; i < 10; ++i) {
+            coils.emplace_back(i, i % 2 == 0);
+            discreteInputs.emplace_back(i, i % 2 == 0);
+        }
+
+        holdingRegisters = {ModbusHoldingRegister(1, 0x1234), ModbusHoldingRegister(2, 0x5678)};
+        inputRegisters = {ModbusInputRegister(1, 0x9ABC), ModbusInputRegister(2, 0xDEF0)};
+
+
         for (int i = 1; i < 11; ++i) {
             auto coil = ModbusCoil(i, true);
             modbusDataArea->insertCoil(ModbusCoil(i, i % 2 == 0));
@@ -21,6 +38,8 @@ protected:
         }
     }
 };
+
+
 
 // Coil Registers Tests
 TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsCorrectData) {
@@ -117,7 +136,6 @@ TEST_F(ModbusPDUTest, ReadCoilsCorrectDataForMaxRegisters) {
 }
 
 // Discrete Inputs Registers Tests
-
 TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsCorrectData) {
 
     ModbusPDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
@@ -224,7 +242,7 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidFuncti
     ASSERT_EQ(response[1], std::byte{0x01});
 }
 
-// TODO: Add tests for ReadHoldingRegisters and ReadInputRegisters
+// Read Holding Registers Tests
 TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsCorrectData) {
 
     ModbusPDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
@@ -324,7 +342,7 @@ TEST_F(ModbusPDUTest, ReadHoldingRegistersCorrectDataForMaxRegisters) {
     ASSERT_EQ(response[1], std::byte{0xFA});
 }
 
-
+// Read Input Registers Tests
 TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsCorrectData) {
 
     ModbusPDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},

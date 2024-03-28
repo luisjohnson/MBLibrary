@@ -10,6 +10,8 @@
 #include <memory>
 #include "Modbus.h"
 #include "ModbusDataArea.h"
+#include "ModbusUtilities.h"
+
 
 /**
  * @class ModbusPDU
@@ -52,6 +54,8 @@ public:
      * @return The constructed response as a string.
      */
     std::vector<std::byte> buildResponse();
+
+
 
 private:
     std::vector<std::byte> _data;
@@ -152,6 +156,7 @@ private:
     std::vector<std::byte> getWriteMultipleRegistersResponse();
 
 
+
     /**
      * @brief Builds the response for boolean registers.
      *
@@ -178,7 +183,7 @@ private:
         response[0] = functionCodeByte;
         response[1] = static_cast<std::byte>(byteCount);
         // Pack the coils into bytes
-        auto packedBits = packBooleanRegistersIntoBytes(booleanRegisters);
+        auto packedBits = Modbus::Utilities::packBooleanRegistersIntoBytes(booleanRegisters);
         // Copy the packed bits into the response
         std::copy(packedBits.begin(), packedBits.end(), response.begin() + 2);
         return response;
@@ -209,7 +214,7 @@ private:
         std::vector<std::byte> response(byteCount + 2);
         response[0] = functionCodeByte;
         response[1] = static_cast<std::byte>(byteCount);
-        std::vector<std::byte> packedBytes = packIntegerRegistersIntoBytes(integerRegisters);
+        std::vector<std::byte> packedBytes = Modbus::Utilities::packIntegerRegistersIntoBytes(integerRegisters);
         std::copy(packedBytes.begin(), packedBytes.end(), response.begin() + 2);
         return response;
     }
