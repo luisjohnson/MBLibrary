@@ -1,16 +1,17 @@
 #include "Modbus.h"
 #include "ModbusPDU.h"
+#include "ModbusDataArea.h"
 
 
-ModbusPDU::ModbusPDU(std::vector<std::byte> rawData, std::shared_ptr<ModbusDataArea> modbusDataArea)
+ModbusPDU::ModbusPDU(std::vector<std::byte> rawData, std::shared_ptr<Modbus::ModbusDataArea> modbusDataArea)
         : _functionCode(Modbus::byteToModbusFunctionCode(rawData[0])), _modbusDataArea(std::move(modbusDataArea)) {
     _data = std::vector<std::byte>(rawData.begin() + 1, rawData.end());
 }
 
 ModbusPDU::ModbusPDU(Modbus::FunctionCode functionCode, std::vector<std::byte> data,
-                     std::shared_ptr<ModbusDataArea> modbusDataArea) : _functionCode(functionCode),
-                                                                       _data(std::move(data)),
-                                                                       _modbusDataArea(std::move(modbusDataArea)) {
+                     std::shared_ptr<Modbus::ModbusDataArea> modbusDataArea) : _functionCode(functionCode),
+                                                                               _data(std::move(data)),
+                                                                               _modbusDataArea(std::move(modbusDataArea)) {
 
 }
 

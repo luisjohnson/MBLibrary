@@ -31,10 +31,10 @@ public:
      * the contents of the PDU. It is used in conjunction with ModbusDataArea to assist in
      * Modbus communication.
      */
-    explicit ModbusPDU(std::vector<std::byte> rawData, std::shared_ptr<ModbusDataArea> modbusDataArea);
+    explicit ModbusPDU(std::vector<std::byte> rawData, std::shared_ptr<Modbus::ModbusDataArea> modbusDataArea);
 
     ModbusPDU(Modbus::FunctionCode functionCode, std::vector<std::byte> data,
-              std::shared_ptr<ModbusDataArea> modbusDataArea);
+              std::shared_ptr<Modbus::ModbusDataArea> modbusDataArea);
 
 
     /**
@@ -60,7 +60,7 @@ public:
 private:
     std::vector<std::byte> _data;
     Modbus::FunctionCode _functionCode;
-    std::shared_ptr<ModbusDataArea> _modbusDataArea;
+    std::shared_ptr<Modbus::ModbusDataArea> _modbusDataArea;
 
     /**
      * @brief Retrieves the starting address and quantity of registers.

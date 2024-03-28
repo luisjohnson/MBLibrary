@@ -15,7 +15,7 @@ protected:
 
     std::vector<Modbus::InputRegister> emptyInputRegisters{};
     std::vector<Modbus::HoldingRegister> emptyHoldingRegisters{};
-    std::shared_ptr<ModbusDataArea> modbusDataArea = std::make_shared<ModbusDataArea>();
+    std::shared_ptr<Modbus::ModbusDataArea> modbusDataArea = std::make_shared<Modbus::ModbusDataArea>();
 
     void SetUp() override {
 
@@ -109,7 +109,7 @@ TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsExceptionForInvalidQuantity) {
 TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsExceptionForRangeExceedingMax) {
 
     ModbusPDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
-                  std::make_shared<ModbusDataArea>());
+                  std::make_shared<Modbus::ModbusDataArea>());
 
     auto response = pdu.buildResponse();
 
@@ -203,7 +203,7 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidQuanti
 TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForRangeExceedingMax) {
 
     ModbusPDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
-                  std::make_shared<ModbusDataArea>());
+                  std::make_shared<Modbus::ModbusDataArea>());
 
     auto response = pdu.buildResponse();
 
@@ -233,7 +233,7 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsCorrectDataForMaxRegisters) {
 TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidFunctionCode) {
 
     ModbusPDU pdu({std::byte{0x2C}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
-                  std::make_shared<ModbusDataArea>());
+                  std::make_shared<Modbus::ModbusDataArea>());
 
     auto response = pdu.buildResponse();
 
@@ -316,7 +316,7 @@ TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForInvalidQuan
 TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForRangeExceedingMax) {
 
     ModbusPDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
-                  std::make_shared<ModbusDataArea>());
+                  std::make_shared<Modbus::ModbusDataArea>());
 
     auto response = pdu.buildResponse();
 
@@ -416,7 +416,7 @@ TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForInvalidQuantit
 TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForRangeExceedingMax) {
 
     ModbusPDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
-                  std::make_shared<ModbusDataArea>());
+                  std::make_shared<Modbus::ModbusDataArea>());
 
     auto response = pdu.buildResponse();
 
