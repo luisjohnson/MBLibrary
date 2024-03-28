@@ -1,25 +1,25 @@
 #include "Modbus.h"
-#include "ModbusPDU.h"
+#include "PDU.h"
 #include "ModbusDataArea.h"
 
 
-Modbus::ModbusPDU::ModbusPDU(std::vector<std::byte> rawData, std::shared_ptr<Modbus::ModbusDataArea> modbusDataArea)
+Modbus::PDU::PDU(std::vector<std::byte> rawData, std::shared_ptr<Modbus::DataArea> modbusDataArea)
         : _functionCode(Modbus::byteToModbusFunctionCode(rawData[0])), _modbusDataArea(std::move(modbusDataArea)) {
     _data = std::vector<std::byte>(rawData.begin() + 1, rawData.end());
 }
 
-Modbus::ModbusPDU::ModbusPDU(Modbus::FunctionCode functionCode, std::vector<std::byte> data,
-                             std::shared_ptr<Modbus::ModbusDataArea> modbusDataArea) : _functionCode(functionCode),
-                                                                               _data(std::move(data)),
-                                                                               _modbusDataArea(std::move(modbusDataArea)) {
+Modbus::PDU::PDU(Modbus::FunctionCode functionCode, std::vector<std::byte> data,
+                 std::shared_ptr<Modbus::DataArea> modbusDataArea) : _functionCode(functionCode),
+                                                                     _data(std::move(data)),
+                                                                     _modbusDataArea(std::move(modbusDataArea)) {
 
 }
 
-Modbus::FunctionCode Modbus::ModbusPDU::getFunctionCode() {
+Modbus::FunctionCode Modbus::PDU::getFunctionCode() {
     return _functionCode;
 }
 
-std::vector<std::byte> Modbus::ModbusPDU::buildResponse() {
+std::vector<std::byte> Modbus::PDU::buildResponse() {
     switch (_functionCode) {
         case Modbus::FunctionCode::ReadCoils:
             return getReadCoilsResponse();
@@ -43,14 +43,14 @@ std::vector<std::byte> Modbus::ModbusPDU::buildResponse() {
     }
 }
 
-std::pair<uint16_t, uint16_t> Modbus::ModbusPDU::getStartingAddressAndQuantityOfRegisters() {
+std::pair<uint16_t, uint16_t> Modbus::PDU::getStartingAddressAndQuantityOfRegisters() {
     auto startingAddress = Modbus::Utilities::twoBytesToUint16(_data[0], _data[1]);
     auto quantityOfRegisters = Modbus::Utilities::twoBytesToUint16(_data[2], _data[3]);
     return {startingAddress, quantityOfRegisters};
 }
 
 
-std::vector<std::byte> Modbus::ModbusPDU::getReadCoilsResponse() {
+std::vector<std::byte> Modbus::PDU::getReadCoilsResponse() {
     // Get the starting address and quantity of coils
     auto [startingAddress, quantityOfCoils] = getStartingAddressAndQuantityOfRegisters();
 
@@ -65,7 +65,7 @@ std::vector<std::byte> Modbus::ModbusPDU::getReadCoilsResponse() {
     }
 }
 
-std::vector<std::byte> Modbus::ModbusPDU::getReadDiscreteInputsResponse() {
+std::vector<std::byte> Modbus::PDU::getReadDiscreteInputsResponse() {
     auto [startingAddress, quantityOfRegisters] = getStartingAddressAndQuantityOfRegisters();
 
     try {
@@ -79,7 +79,7 @@ std::vector<std::byte> Modbus::ModbusPDU::getReadDiscreteInputsResponse() {
     }
 }
 
-std::vector<std::byte> Modbus::ModbusPDU::getReadHoldingRegistersResponse() {
+std::vector<std::byte> Modbus::PDU::getReadHoldingRegistersResponse() {
     auto [startingAddress, quantityOfRegisters] = getStartingAddressAndQuantityOfRegisters();
 
     try {
@@ -94,7 +94,7 @@ std::vector<std::byte> Modbus::ModbusPDU::getReadHoldingRegistersResponse() {
     }
 }
 
-std::vector<std::byte> Modbus::ModbusPDU::getReadInputRegistersResponse() {
+std::vector<std::byte> Modbus::PDU::getReadInputRegistersResponse() {
     auto [startingAddress, quantityOfRegisters] = getStartingAddressAndQuantityOfRegisters();
 
     try {
@@ -108,7 +108,7 @@ std::vector<std::byte> Modbus::ModbusPDU::getReadInputRegistersResponse() {
     }
 }
 
-std::vector<std::byte> Modbus::ModbusPDU::getWriteSingleCoilResponse() {
+std::vector<std::byte> Modbus::PDU::getWriteSingleCoilResponse() {
     int address = Modbus::Utilities::twoBytesToUint16(_data[1], _data[2]);
     int value = Modbus::Utilities::twoBytesToUint16(_data[3], _data[4]);
     bool coilValue = (value == 0xFF00);
@@ -126,7 +126,7 @@ std::vector<std::byte> Modbus::ModbusPDU::getWriteSingleCoilResponse() {
     }
 }
 
-std::vector<std::byte> Modbus::ModbusPDU::getWriteSingleRegisterResponse() {
+std::vector<std::byte> Modbus::PDU::getWriteSingleRegisterResponse() {
     auto [address, value] = getStartingAddressAndQuantityOfRegisters();
     try {
         auto holdingRegister = _modbusDataArea->getHoldingRegisters(address, 1).front();
@@ -137,7 +137,7 @@ std::vector<std::byte> Modbus::ModbusPDU::getWriteSingleRegisterResponse() {
     }
 }
 
-std::vector<std::byte> Modbus::ModbusPDU::getWriteMultipleCoilsResponse() {
+std::vector<std::byte> Modbus::PDU::getWriteMultipleCoilsResponse() {
     auto [startingAddress, quantityOfCoils] = getStartingAddressAndQuantityOfRegisters();
     auto byteCount = static_cast<int>(_data[6]);
 
@@ -163,7 +163,7 @@ std::vector<std::byte> Modbus::ModbusPDU::getWriteMultipleCoilsResponse() {
     }
 }
 
-std::vector<std::byte> Modbus::ModbusPDU::getWriteMultipleRegistersResponse() {
+std::vector<std::byte> Modbus::PDU::getWriteMultipleRegistersResponse() {
     auto [startingAddress, quantityOfRegisters] = getStartingAddressAndQuantityOfRegisters();
     auto byteCount = static_cast<int>(_data[6]);
     try {

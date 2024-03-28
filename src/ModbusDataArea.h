@@ -34,24 +34,24 @@ namespace Modbus {
     };
 
     /**
-     * @class ModbusDataArea
+     * @class DataArea
      * @brief Represents a data area for storing Modbus registers and coils.
      *
-     * The ModbusDataArea class provides a container for storing Modbus registers and coils. It ensures
+     * The DataArea class provides a container for storing Modbus registers and coils. It ensures
      * thread-safety by using a shared mutex to control access to the data. It also provides methods for
      * inserting, retrieving, and modifying the registers and coils.
      */
-    class ModbusDataArea : public std::enable_shared_from_this<ModbusDataArea> {
+    class DataArea : public std::enable_shared_from_this<DataArea> {
     public:
         /**
-         * @class ModbusDataArea
+         * @class DataArea
          * @brief Represents a data area for storing Modbus registers and coils.
          *
-         * The ModbusDataArea class provides a container for storing Modbus registers and coils. It ensures
+         * The DataArea class provides a container for storing Modbus registers and coils. It ensures
          * thread-safety by using a shared mutex to control access to the data. It also provides methods for
          * inserting, retrieving, and modifying the registers and coils.
          */
-        ModbusDataArea();
+        DataArea();
 
         /**
          * @brief Inserts a Coil into the container.
@@ -106,7 +106,7 @@ namespace Modbus {
          * @param count The number of coils to be generated.
          * @param type The type of value generation to be used, defaults to ValueGenerationType::Zeros.
          *
-         * @see ModbusDataArea::generateBooleanRegisters()
+         * @see DataArea::generateBooleanRegisters()
          */
         void generateCoils(int startAddress, int count, ValueGenerationType type = ValueGenerationType::Zeros);
 
@@ -120,13 +120,13 @@ namespace Modbus {
          * @param count The number of discrete inputs to generate.
          * @param type The value generation type. Default is ValueGenerationType::Zeros.
          *
-         * @details The generated discrete inputs are stored in the '_discreteInputs' member variable of the ModbusDataArea class.
+         * @details The generated discrete inputs are stored in the '_discreteInputs' member variable of the DataArea class.
          * The generated values are based on the specified value generation type, which can be one of the following:
          * - ValueGenerationType::Zeros: All generated values are set to zero.
          * - ValueGenerationType::Ones: All generated values are set to one.
          * - ValueGenerationType::Random: All generated values are randomly set to zero or one.
          *
-         * @see ModbusDataArea::generateBooleanRegisters
+         * @see DataArea::generateBooleanRegisters
          */
         void generateDiscreteInputs(int startAddress, int count, ValueGenerationType type = ValueGenerationType::Zeros);
 
@@ -141,7 +141,7 @@ namespace Modbus {
          * @param count The number of holding registers to generate.
          * @param type The value generation type (optional). Defaults to ValueGenerationType::Zeros.
          *
-         * @sa ModbusDataArea::generateHoldingRegisters
+         * @sa DataArea::generateHoldingRegisters
          */
         void
         generateHoldingRegisters(int startAddress, int count, ValueGenerationType type = ValueGenerationType::Zeros);
@@ -252,17 +252,17 @@ namespace Modbus {
         std::vector<InputRegister> getInputRegisters(int start, int length);
 
         /**
-         * @brief Retrieves a shared pointer to the ModbusDataArea object.
+         * @brief Retrieves a shared pointer to the DataArea object.
          *
-         * This function returns a shared pointer to the ModbusDataArea object.
-         * The ModbusDataArea class represents a data area for storing Modbus registers and coils. It ensures thread-safety
+         * This function returns a shared pointer to the DataArea object.
+         * The DataArea class represents a data area for storing Modbus registers and coils. It ensures thread-safety
          * by using a shared mutex to control access to the data. Clients can use this function to obtain a shared pointer
-         * to the ModbusDataArea object and safely access its methods and members.
+         * to the DataArea object and safely access its methods and members.
          *
          *
-         * @return std::shared_ptr<ModbusDataArea> A shared pointer to the ModbusDataArea object.
+         * @return std::shared_ptr<DataArea> A shared pointer to the DataArea object.
          */
-        std::shared_ptr<ModbusDataArea> getShared();
+        std::shared_ptr<DataArea> getShared();
 
 
     private:
@@ -395,7 +395,6 @@ namespace Modbus {
                                       ValueGenerationType type) {
             static_assert(std::is_same<T, Coil>::value || std::is_same<T, DiscreteInput>::value,
                           "Invalid register type, register type must be Coil or DiscreteInput.");
-            std::lock_guard<std::mutex> lock(_mutex);
             switch (type) {
                 case ValueGenerationType::Zeros:
                     for (int i = 0; i < count; i++) {
@@ -447,7 +446,6 @@ namespace Modbus {
                                       ValueGenerationType type) {
             static_assert(std::is_same<T, HoldingRegister>::value || std::is_same<T, InputRegister>::value,
                           "Invalid register type, register type must be HoldingRegister or InputRegister.");
-            std::lock_guard<std::mutex> lock(_mutex);
             switch (type) {
                 case ValueGenerationType::Zeros:
                     for (int i = 0; i < count; i++) {

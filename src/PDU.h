@@ -14,27 +14,27 @@
 
 namespace Modbus {
     /**
-         * @class ModbusPDU
+         * @class PDU
          * @brief Represents a Modbus Protocol Data Unit (PDU).
          *
          * This class encapsulates the raw data and provides methods to access and manipulate
-         * the contents of the PDU. It is used in conjunction with ModbusDataArea to assist in
+         * the contents of the PDU. It is used in conjunction with DataArea to assist in
          * Modbus communication.
          */
-    class ModbusPDU {
+    class PDU {
     public:
         /**
-         * @class ModbusPDU
+         * @class PDU
          * @brief Represents a Modbus Protocol Data Unit (PDU).
          *
          * This class encapsulates the raw data and provides methods to access and manipulate
-         * the contents of the PDU. It is used in conjunction with ModbusDataArea to assist in
+         * the contents of the PDU. It is used in conjunction with DataArea to assist in
          * Modbus communication.
          */
-        explicit ModbusPDU(std::vector<std::byte> rawData, std::shared_ptr<ModbusDataArea> modbusDataArea);
+        explicit PDU(std::vector<std::byte> rawData, std::shared_ptr<DataArea> modbusDataArea);
 
-        ModbusPDU(FunctionCode functionCode, std::vector<std::byte> data,
-                  std::shared_ptr<ModbusDataArea> modbusDataArea);
+        PDU(FunctionCode functionCode, std::vector<std::byte> data,
+            std::shared_ptr<DataArea> modbusDataArea);
 
 
         /**
@@ -59,7 +59,7 @@ namespace Modbus {
     private:
         std::vector<std::byte> _data;
         FunctionCode _functionCode;
-        std::shared_ptr<ModbusDataArea> _modbusDataArea;
+        std::shared_ptr<DataArea> _modbusDataArea;
 
         /**
          * @brief Retrieves the starting address and quantity of registers.

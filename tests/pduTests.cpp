@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <ModbusDataArea.h>
 #include <Modbus.h>
-#include <ModbusPDU.h>
+#include <PDU.h>
 #include <memory>
 
 
@@ -15,7 +15,7 @@ protected:
 
     std::vector<Modbus::InputRegister> emptyInputRegisters{};
     std::vector<Modbus::HoldingRegister> emptyHoldingRegisters{};
-    std::shared_ptr<Modbus::ModbusDataArea> modbusDataArea = std::make_shared<Modbus::ModbusDataArea>();
+    std::shared_ptr<Modbus::DataArea> modbusDataArea = std::make_shared<Modbus::DataArea>();
 
     void SetUp() override {
 
@@ -44,8 +44,8 @@ protected:
 // Coil Registers Tests
 TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsCorrectData) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -58,8 +58,8 @@ TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsCorrectData) {
 
 TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsCorrectDataForOddNumberOfCoils) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x05}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x05}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -71,8 +71,8 @@ TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsCorrectDataForOddNumberOfCoils) {
 
 TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsCorrectDataForSingleCoil) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x01}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x01}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -84,8 +84,8 @@ TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsCorrectDataForSingleCoil) {
 
 TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsExceptionForInvalidAddress) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x0F}, std::byte{00}, std::byte{0x0A}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x0F}, std::byte{00}, std::byte{0x0A}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -96,8 +96,8 @@ TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsExceptionForInvalidAddress) {
 
 TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsExceptionForInvalidQuantity) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0F}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0F}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -108,8 +108,8 @@ TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsExceptionForInvalidQuantity) {
 
 TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsExceptionForRangeExceedingMax) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
-                          std::make_shared<Modbus::ModbusDataArea>());
+    Modbus::PDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
+                    std::make_shared<Modbus::DataArea>());
 
     auto response = pdu.buildResponse();
 
@@ -125,8 +125,8 @@ TEST_F(ModbusPDUTest, ReadCoilsCorrectDataForMaxRegisters) {
         modbusDataArea->insertCoil(Modbus::Coil(prevAddress + 1, true));
     }
 
-    Modbus::ModbusPDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD0}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD0}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -138,8 +138,8 @@ TEST_F(ModbusPDUTest, ReadCoilsCorrectDataForMaxRegisters) {
 // Discrete Inputs Registers Tests
 TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsCorrectData) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -152,8 +152,8 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsCorrectData) {
 
 TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsCorrectDataForOddNumberOfDiscreteInputs) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x05}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x05}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -165,8 +165,8 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsCorrectDataForOddNumberOf
 
 TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsCorrectDataForSingleCoil) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x01}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x01}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -178,8 +178,8 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsCorrectDataForSingleCoil)
 
 TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidAddress) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x0F}, std::byte{00}, std::byte{0x0A}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x0F}, std::byte{00}, std::byte{0x0A}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -190,8 +190,8 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidAddres
 
 TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidQuantity) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0F}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0F}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -202,8 +202,8 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidQuanti
 
 TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForRangeExceedingMax) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
-                          std::make_shared<Modbus::ModbusDataArea>());
+    Modbus::PDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
+                    std::make_shared<Modbus::DataArea>());
 
     auto response = pdu.buildResponse();
 
@@ -219,8 +219,8 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsCorrectDataForMaxRegisters) {
         modbusDataArea->insertDiscreteInput(Modbus::DiscreteInput(prevAddress + 1, true));
     }
 
-    Modbus::ModbusPDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD0}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD0}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -232,8 +232,8 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsCorrectDataForMaxRegisters) {
 
 TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidFunctionCode) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x2C}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
-                          std::make_shared<Modbus::ModbusDataArea>());
+    Modbus::PDU pdu({std::byte{0x2C}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
+                    std::make_shared<Modbus::DataArea>());
 
     auto response = pdu.buildResponse();
 
@@ -245,8 +245,8 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidFuncti
 // Read Holding Registers Tests
 TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsCorrectData) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -277,8 +277,8 @@ TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsCorrectData) {
 
 TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsCorrectDataForSingleRegister) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x01}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x01}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -291,8 +291,8 @@ TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsCorrectDataForSingleReg
 
 TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForInvalidAddress) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x0F}, std::byte{00}, std::byte{0x0A}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x0F}, std::byte{00}, std::byte{0x0A}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -303,8 +303,8 @@ TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForInvalidAddr
 
 TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForInvalidQuantity) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0F}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0F}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -315,8 +315,8 @@ TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForInvalidQuan
 
 TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForRangeExceedingMax) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
-                          std::make_shared<Modbus::ModbusDataArea>());
+    Modbus::PDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
+                    std::make_shared<Modbus::DataArea>());
 
     auto response = pdu.buildResponse();
 
@@ -332,8 +332,8 @@ TEST_F(ModbusPDUTest, ReadHoldingRegistersCorrectDataForMaxRegisters) {
         modbusDataArea->insertHoldingRegister(Modbus::HoldingRegister(prevAddress + 1, prevAddress + 1));
     }
 
-    Modbus::ModbusPDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{0x00}, std::byte{0x7D}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{0x00}, std::byte{0x7D}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -345,8 +345,8 @@ TEST_F(ModbusPDUTest, ReadHoldingRegistersCorrectDataForMaxRegisters) {
 // Read Input Registers Tests
 TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsCorrectData) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -377,8 +377,8 @@ TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsCorrectData) {
 
 TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsCorrectDataForSingleRegister) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x01}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x01}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -391,8 +391,8 @@ TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsCorrectDataForSingleRegist
 
 TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForInvalidAddress) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x0F}, std::byte{00}, std::byte{0x0A}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x0F}, std::byte{00}, std::byte{0x0A}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -403,8 +403,8 @@ TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForInvalidAddress
 
 TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForInvalidQuantity) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0F}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0F}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -415,8 +415,8 @@ TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForInvalidQuantit
 
 TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForRangeExceedingMax) {
 
-    Modbus::ModbusPDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
-                          std::make_shared<Modbus::ModbusDataArea>());
+    Modbus::PDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
+                    std::make_shared<Modbus::DataArea>());
 
     auto response = pdu.buildResponse();
 
@@ -432,8 +432,8 @@ TEST_F(ModbusPDUTest, ReadInputRegisterCorrectDataForMaxRegisters) {
         modbusDataArea->insertInputRegister(Modbus::InputRegister(prevAddress + 1, prevAddress + 1));
     }
 
-    Modbus::ModbusPDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{0x00}, std::byte{0x7D}},
-                          modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{0x00}, std::byte{0x7D}},
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 

@@ -12,8 +12,8 @@ include_directories(${GTEST_INCLUDE_DIRS})
 add_library(MBLibrary STATIC
         src/Modbus.cpp
         src/Modbus.h
-        src/ModbusPDU.cpp
-        src/ModbusPDU.h
+        src/PDU.cpp
+        src/PDU.h
         src/ModbusDataArea.cpp
         src/ModbusDataArea.h
         src/ModbusUtilities.cpp
