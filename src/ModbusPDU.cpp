@@ -3,9 +3,9 @@
 #include "ModbusUtilities.h"
 
 
-ModbusPDU::ModbusPDU(std::vector<std::byte> _rawData, std::shared_ptr<ModbusDataArea> modbusDataArea)
-        : _functionCode(byteToModbusFunctionCode(_rawData[0])), _modbusDataArea(std::move(modbusDataArea)) {
-    _data = std::vector<std::byte>(_rawData.begin() + 1, _rawData.end());
+ModbusPDU::ModbusPDU(std::vector<std::byte> rawData, std::shared_ptr<ModbusDataArea> modbusDataArea)
+        : _functionCode(byteToModbusFunctionCode(rawData[0])), _modbusDataArea(std::move(modbusDataArea)) {
+    _data = std::vector<std::byte>(rawData.begin() + 1, rawData.end());
 }
 
 ModbusPDU::ModbusPDU(ModbusFunctionCode functionCode, std::vector<std::byte> data,

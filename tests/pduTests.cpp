@@ -16,6 +16,8 @@ protected:
             auto coil = ModbusCoil(i, true);
             modbusDataArea->insertCoil(ModbusCoil(i, i % 2 == 0));
             modbusDataArea->insertDiscreteInput(ModbusDiscreteInput(i, i % 2 == 0));
+            modbusDataArea->insertHoldingRegister(ModbusHoldingRegister(i, i));
+            modbusDataArea->insertInputRegister(ModbusInputRegister(i, i));
         }
     }
 };
@@ -223,6 +225,205 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidFuncti
 }
 
 // TODO: Add tests for ReadHoldingRegisters and ReadInputRegisters
+TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsCorrectData) {
+
+    ModbusPDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
+                  modbusDataArea);
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 22);
+    ASSERT_EQ(response[0], std::byte{0x03});
+    ASSERT_EQ(response[1], std::byte{0x14});
+    ASSERT_EQ(response[2], std::byte{0x00});
+    ASSERT_EQ(response[3], std::byte{0x01});
+    ASSERT_EQ(response[4], std::byte{0x00});
+    ASSERT_EQ(response[5], std::byte{0x02});
+    ASSERT_EQ(response[6], std::byte{0x00});
+    ASSERT_EQ(response[7], std::byte{0x03});
+    ASSERT_EQ(response[8], std::byte{0x00});
+    ASSERT_EQ(response[9], std::byte{0x04});
+    ASSERT_EQ(response[10], std::byte{0x00});
+    ASSERT_EQ(response[11], std::byte{0x05});
+    ASSERT_EQ(response[12], std::byte{0x00});
+    ASSERT_EQ(response[13], std::byte{0x06});
+    ASSERT_EQ(response[14], std::byte{0x00});
+    ASSERT_EQ(response[15], std::byte{0x07});
+    ASSERT_EQ(response[16], std::byte{0x00});
+    ASSERT_EQ(response[17], std::byte{0x08});
+    ASSERT_EQ(response[18], std::byte{0x00});
+    ASSERT_EQ(response[19], std::byte{0x09});
+    ASSERT_EQ(response[20], std::byte{0x00});
+    ASSERT_EQ(response[21], std::byte{0x0A});
+}
+
+TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsCorrectDataForSingleRegister) {
+
+    ModbusPDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x01}},
+                  modbusDataArea);
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 4);
+    ASSERT_EQ(response[0], std::byte{0x03});
+    ASSERT_EQ(response[1], std::byte{0x02});
+    ASSERT_EQ(response[2], std::byte{0x00});
+    ASSERT_EQ(response[3], std::byte{0x01});
+}
+
+TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForInvalidAddress) {
+
+    ModbusPDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x0F}, std::byte{00}, std::byte{0x0A}},
+                  modbusDataArea);
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte{0x83});
+    ASSERT_EQ(response[1], std::byte{0x02});
+}
+
+TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForInvalidQuantity) {
+
+    ModbusPDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0F}},
+                  modbusDataArea);
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte{0x83});
+    ASSERT_EQ(response[1], std::byte{0x02});
+}
+
+TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForRangeExceedingMax) {
+
+    ModbusPDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
+                  std::make_shared<ModbusDataArea>());
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte{0x83});
+    ASSERT_EQ(response[1], std::byte{0x02});
+}
+
+TEST_F(ModbusPDUTest, ReadHoldingRegistersCorrectDataForMaxRegisters) {
+
+    while (modbusDataArea->getAllHoldingRegisters().size() < 125) {
+        int prevAddress = modbusDataArea->getAllHoldingRegisters().back().getAddress();
+        modbusDataArea->insertHoldingRegister(ModbusHoldingRegister(prevAddress + 1, prevAddress + 1));
+    }
+
+    ModbusPDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{0x00}, std::byte{0x7D}},
+                  modbusDataArea);
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 252);
+    ASSERT_EQ(response[0], std::byte{0x03});
+    ASSERT_EQ(response[1], std::byte{0xFA});
+}
+
+
+TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsCorrectData) {
+
+    ModbusPDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
+                  modbusDataArea);
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 22);
+    ASSERT_EQ(response[0], std::byte{0x04});
+    ASSERT_EQ(response[1], std::byte{0x14});
+    ASSERT_EQ(response[2], std::byte{0x00});
+    ASSERT_EQ(response[3], std::byte{0x01});
+    ASSERT_EQ(response[4], std::byte{0x00});
+    ASSERT_EQ(response[5], std::byte{0x02});
+    ASSERT_EQ(response[6], std::byte{0x00});
+    ASSERT_EQ(response[7], std::byte{0x03});
+    ASSERT_EQ(response[8], std::byte{0x00});
+    ASSERT_EQ(response[9], std::byte{0x04});
+    ASSERT_EQ(response[10], std::byte{0x00});
+    ASSERT_EQ(response[11], std::byte{0x05});
+    ASSERT_EQ(response[12], std::byte{0x00});
+    ASSERT_EQ(response[13], std::byte{0x06});
+    ASSERT_EQ(response[14], std::byte{0x00});
+    ASSERT_EQ(response[15], std::byte{0x07});
+    ASSERT_EQ(response[16], std::byte{0x00});
+    ASSERT_EQ(response[17], std::byte{0x08});
+    ASSERT_EQ(response[18], std::byte{0x00});
+    ASSERT_EQ(response[19], std::byte{0x09});
+    ASSERT_EQ(response[20], std::byte{0x00});
+    ASSERT_EQ(response[21], std::byte{0x0A});
+}
+
+TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsCorrectDataForSingleRegister) {
+
+    ModbusPDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x01}},
+                  modbusDataArea);
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 4);
+    ASSERT_EQ(response[0], std::byte{0x04});
+    ASSERT_EQ(response[1], std::byte{0x02});
+    ASSERT_EQ(response[2], std::byte{0x00});
+    ASSERT_EQ(response[3], std::byte{0x01});
+}
+
+TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForInvalidAddress) {
+
+    ModbusPDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x0F}, std::byte{00}, std::byte{0x0A}},
+                  modbusDataArea);
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte{0x84});
+    ASSERT_EQ(response[1], std::byte{0x02});
+}
+
+TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForInvalidQuantity) {
+
+    ModbusPDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0F}},
+                  modbusDataArea);
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte{0x84});
+    ASSERT_EQ(response[1], std::byte{0x02});
+}
+
+TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForRangeExceedingMax) {
+
+    ModbusPDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
+                  std::make_shared<ModbusDataArea>());
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte{0x84});
+    ASSERT_EQ(response[1], std::byte{0x02});
+}
+
+TEST_F(ModbusPDUTest, ReadInputRegisterCorrectDataForMaxRegisters) {
+
+    while (modbusDataArea->getAllInputRegisters().size() < 125) {
+        int prevAddress = modbusDataArea->getAllInputRegisters().back().getAddress();
+        modbusDataArea->insertInputRegister(ModbusInputRegister(prevAddress + 1, prevAddress + 1));
+    }
+
+    ModbusPDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{0x00}, std::byte{0x7D}},
+                  modbusDataArea);
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 252);
+    ASSERT_EQ(response[0], std::byte{0x04});
+    ASSERT_EQ(response[1], std::byte{0xFA});
+}
+
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
