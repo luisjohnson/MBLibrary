@@ -34,9 +34,14 @@ namespace Modbus {
     };
 
     /**
-        *
-        */
-    class ModbusDataArea : public std::__1::enable_shared_from_this<ModbusDataArea> {
+     * @class ModbusDataArea
+     * @brief Represents a data area for storing Modbus registers and coils.
+     *
+     * The ModbusDataArea class provides a container for storing Modbus registers and coils. It ensures
+     * thread-safety by using a shared mutex to control access to the data. It also provides methods for
+     * inserting, retrieving, and modifying the registers and coils.
+     */
+    class ModbusDataArea : public std::enable_shared_from_this<ModbusDataArea> {
     public:
         /**
          * @class ModbusDataArea
@@ -161,7 +166,7 @@ namespace Modbus {
          * @defgroup Coils Coils
          * @brief Functions related to retrieving all coils
          */
-        std::__1::vector<Coil> &getAllCoils();
+        std::vector<Coil> &getAllCoils();
 
         /**
          * @brief Retrieve the state of all the discrete inputs.
@@ -170,7 +175,7 @@ namespace Modbus {
          *
          * @return A vector of boolean values representing the state of all the discrete inputs.
          */
-        std::__1::vector<DiscreteInput> &getAllDiscreteInputs();
+        std::vector<DiscreteInput> &getAllDiscreteInputs();
 
         /**
          * @brief Retrieves all holding registers from a device.
@@ -180,7 +185,7 @@ namespace Modbus {
          *
          * @return An array containing all holding registers read from the device.
          */
-        std::__1::vector<HoldingRegister> &getAllHoldingRegisters();
+        std::vector<HoldingRegister> &getAllHoldingRegisters();
 
         /**
          * @brief Returns an array of all input registers.
@@ -189,7 +194,7 @@ namespace Modbus {
          *
          * @return An array of input registers.
          */
-        std::__1::vector<InputRegister> &getAllInputRegisters();
+        std::vector<InputRegister> &getAllInputRegisters();
 
         /**
          * @brief Retrieves a range of coil values from a specific start index.
@@ -203,7 +208,7 @@ namespace Modbus {
          * @note The start index should be a non-negative value, and the length should be a positive value.
          * @warning The function does not perform any boundary checks, and accessing out of range indices may lead to undefined behavior.
          */
-        std::__1::vector<Coil> getCoils(int start, int length);
+        std::vector<Coil> getCoils(int start, int length);
 
         /**
          * @brief Gets the discrete inputs from a specific range
@@ -216,7 +221,7 @@ namespace Modbus {
          *
          * @return A vector of bool values representing the discrete inputs
          */
-        std::__1::vector<DiscreteInput> getDiscreteInputs(int start, int length);
+        std::vector<DiscreteInput> getDiscreteInputs(int start, int length);
 
         /**
          * @brief Retrieves holding registers from a device.
@@ -232,7 +237,7 @@ namespace Modbus {
          *       this function. Make sure that the start address and length values
          *       are valid for the device being used.
          */
-        std::__1::vector<HoldingRegister> getHoldingRegisters(int start, int length);
+        std::vector<HoldingRegister> getHoldingRegisters(int start, int length);
 
         /**
          * @brief Get the input registers from a Modbus device.
@@ -244,7 +249,7 @@ namespace Modbus {
          * @param length The number of input registers to retrieve.
          * @return A list of input registers retrieved from the Modbus device.
          */
-        std::__1::vector<InputRegister> getInputRegisters(int start, int length);
+        std::vector<InputRegister> getInputRegisters(int start, int length);
 
         /**
          * @brief Retrieves a shared pointer to the ModbusDataArea object.
@@ -262,10 +267,10 @@ namespace Modbus {
 
     private:
 
-        std::__1::vector<Coil> _coils;
-        std::__1::vector<DiscreteInput> _discreteInputs;
-        std::__1::vector<HoldingRegister> _holdingRegisters;
-        std::__1::vector<InputRegister> _inputRegisters;
+        std::vector<Coil> _coils;
+        std::vector<DiscreteInput> _discreteInputs;
+        std::vector<HoldingRegister> _holdingRegisters;
+        std::vector<InputRegister> _inputRegisters;
         std::mutex _mutex;
 
         /**
@@ -290,8 +295,8 @@ namespace Modbus {
       * After running this code, the 'registers' vector will contain pointers to 'register2' and 'register1' in that order.
       */
         template<typename T>
-        void insertRegister(std::__1::vector<T> &registers, T reg) {
-            std::__1::lock_guard<std::mutex> lock(_mutex);
+        void insertRegister(std::vector<T> &registers, T reg) {
+            std::lock_guard<std::mutex> lock(_mutex);
             registers.push_back(reg);
             if (registers.size() > 1)
                 std::ranges::sort(registers, [](const auto &a, const auto &b) {
@@ -311,7 +316,7 @@ namespace Modbus {
          * @return std::vector<std::shared_ptr<T>> The vector containing all registers.
          */
         template<typename T>
-        std::vector<T> &getAllRegisters(std::__1::vector<T> &registers) {
+        std::vector<T> &getAllRegisters(std::vector<T> &registers) {
             std::lock_guard<std::mutex> lock(_mutex);
             return registers;
         }
@@ -334,7 +339,7 @@ namespace Modbus {
          * @return void
          */
         template<typename T>
-        std::vector<T> getRegisters(std::__1::vector<T> &registers, int start, int length) {
+        std::vector<T> getRegisters(std::vector<T> &registers, int start, int length) {
             std::lock_guard<std::mutex> lock(_mutex);
             // Calculate the end index of the range
             int end = start + length - 1;
@@ -476,13 +481,4 @@ namespace Modbus {
         }
     };
 }
-
-/**
- * @brief Represents a Modbus data area for storing Modbus registers and coils.
- *
- * The ModbusDataArea class provides a container for storing Modbus registers and coils. It ensures thread-safety by
- * using a shared mutex to control access to the data. It also provides methods for inserting, retrieving, and modifying
- * the registers and coils.
- */
-
 #endif //MODBUSDATAAREA_H

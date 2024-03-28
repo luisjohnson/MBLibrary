@@ -88,6 +88,22 @@ namespace Modbus {
         GatewayTargetDeviceFailedToRespond = 0x0B
     };
 
+    /**
+     * @brief Converts a Modbus function code to a byte.
+     *
+     * This function converts a Modbus function code to a byte.
+     * The function code is represented as an enumeration value of the FunctionCode
+     * enumeration.
+     *
+     * @param functionCode The Modbus function code to convert.
+     * @return The Modbus function code as a byte.
+     *
+     * @par Example
+     * @code{.cpp}
+     * auto functionCode = FunctionCode::ReadCoils;
+     * auto byte = modbusFunctionCodeToByte(functionCode);
+     * @endcode
+     */
     FunctionCode byteToModbusFunctionCode(std::byte b);
 
     /**
@@ -105,27 +121,57 @@ namespace Modbus {
         }
     };
 
+
+    /**
+     * @brief Fill the given value with zeros until it reaches the specified length.
+     *
+     * This function takes an integer value and a length as input. It fills the value with leading zeros until it reaches
+     * the specified length. The result is returned as a string.
+     *
+     * @param value The value to be filled with zeros.
+     * @param length The desired length of the resulting string.
+     * @return The value filled with zeros as a string.
+     *
+     * @throws std::invalid_argument If the value is negative.
+     *
+     * @note This function assumes a non-negative value is provided. If a negative value is passed, an exception of type
+     * std::invalid_argument will be thrown. Make sure to handle this exception appropriately.
+     * @par example
+     * @code{.cpp}
+     * auto result = fillWithZeros(123, 5); // returns "00123"
+     * @endcode
+     */
     std::string fillWithZeros(const int value, const int length);
 
+
+
+    /**
+     * @brief Calculates the number of bytes required to store a specified number of bits.
+     *
+     * This function takes in the number of bits and returns the corresponding number of bytes required to store those bits.
+     *
+     * @param numberOfBits The number of bits to be converted into bytes.
+     * @return The number of bytes required to store the given number of bits.
+     * @code{.cpp}
+     * auto result = calculateBytesFromBits(16); // returns 2
+     * @endcode
+     */
     int calculateBytesFromBits(int numberOfBits);
 
+
+    /**
+     * @brief The Register class represents a modbus register.
+     *
+     * This class provides functionality to read and write values to a modbus register.
+     * Each register has an address which can be accessed using the getAddress() method.
+     * The value stored in the register can be accessed using the read() method, and can be modified using the write() method.
+     *
+     * @tparam T The data type of the register value.
+     */
     template<typename T>
     class Register {
     public:
-        /**
-         * @brief The Register class represents a modbus register.
-         *
-         * This class provides functionality to read and write values to a modbus register.
-         * Each register has an address which can be accessed using the getAddress() method.
-         * The value stored in the register can be accessed using the read() method, and can be modified using the write() method.
-         *
-         * @par Example
-         * @code{.cpp}
-         * // <Coil> and <HoldingRegister> are both subclasses of <Register>
-         * Coil coil1(1, true);
-         * HoldingRegister holdReg1(1, 1200);
-         * @endcode
-         */
+
         virtual ~Register() = default;
 
         /**
