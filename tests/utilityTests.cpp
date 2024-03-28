@@ -1,22 +1,23 @@
 #include <gtest/gtest.h>
 #include <cstddef>
 #include <ModbusUtilities.h>
+#include <Modbus.h>
 
 
 class UtilityTest : public ::testing::Test {
 
 protected:
-    std::vector<ModbusCoil> coils;
-    std::vector<ModbusDiscreteInput> discreteInputs;
+    std::vector<Modbus::Coil> coils;
+    std::vector<Modbus::DiscreteInput> discreteInputs;
     std::byte msb{};
     std::byte lsb{};
     uint16_t expected{};
 
-    std::vector<ModbusHoldingRegister> holdingRegisters;
-    std::vector<ModbusInputRegister> inputRegisters;
+    std::vector<Modbus::HoldingRegister> holdingRegisters;
+    std::vector<Modbus::InputRegister> inputRegisters;
 
-    std::vector<ModbusInputRegister> emptyInputRegisters{};
-    std::vector<ModbusHoldingRegister> emptyHoldingRegisters{};
+    std::vector<Modbus::InputRegister> emptyInputRegisters{};
+    std::vector<Modbus::HoldingRegister> emptyHoldingRegisters{};
 
     void SetUp() override {
         // Initialize the coils and discrete inputs
@@ -25,8 +26,8 @@ protected:
             discreteInputs.emplace_back(i, i % 2 == 0);
         }
 
-        holdingRegisters = {ModbusHoldingRegister(1, 0x1234), ModbusHoldingRegister(2, 0x5678)};
-        inputRegisters = {ModbusInputRegister(1, 0x9ABC), ModbusInputRegister(2, 0xDEF0)};
+        holdingRegisters = {Modbus::HoldingRegister(1, 0x1234), Modbus::HoldingRegister(2, 0x5678)};
+        inputRegisters = {Modbus::InputRegister(1, 0x9ABC), Modbus::InputRegister(2, 0xDEF0)};
     }
 };
 
@@ -53,7 +54,7 @@ TEST_F(UtilityTest, packBooleanRegistersIntoBytes_DiscreteInputs) {
 }
 
 TEST_F(UtilityTest, packBooleanRegistersIntoBytes_EmptyVector) {
-    std::vector<ModbusCoil> emptyCoils;
+    std::vector<Modbus::Coil> emptyCoils;
     auto packedCoils = Modbus::Utilities::packBooleanRegistersIntoBytes(emptyCoils);
 
     // Check the size of the packed coils
@@ -61,8 +62,8 @@ TEST_F(UtilityTest, packBooleanRegistersIntoBytes_EmptyVector) {
 }
 
 // TEST(UtilityTest, packBooleanRegistersIntoBytes_WrongType) {
-//     std::vector<std::shared_ptr<ModbusInputRegister>> inputRegisters;
-//     inputRegisters.push_back(std::make_shared<ModbusInputRegister>(1, 1000));
+//     std::vector<std::shared_ptr<InputRegister>> inputRegisters;
+//     inputRegisters.push_back(std::make_shared<InputRegister>(1, 1000));
 //
 //     // Check that the function throws a static_assert
 //     EXPECT_ANY_THROW(packBooleanRegistersIntoBytes(inputRegisters));

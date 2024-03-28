@@ -3,6 +3,7 @@
 //
 #include <gtest/gtest.h>
 #include "ModbusDataArea.h"
+#include "Modbus.h"
 
 class ModbusDataAreaTestWithFixture : public ::testing::Test {
 protected:
@@ -16,7 +17,7 @@ protected:
 
 TEST(ModbusDataAreaTest, InsertAndRetrieveCoil) {
     ModbusDataArea dataArea;
-    ModbusCoil coil = ModbusCoil(1, true);
+    Modbus::Coil coil = Modbus::Coil(1, true);
     dataArea.insertCoil(coil);
     auto allCoils = dataArea.getAllCoils();
     ASSERT_TRUE(allCoils.size() == 1);
@@ -26,7 +27,7 @@ TEST(ModbusDataAreaTest, InsertAndRetrieveCoil) {
 
 TEST(ModbusDataAreaTest, InsertAndRetrieveDiscreteInput) {
     ModbusDataArea dataArea;
-    auto input = ModbusDiscreteInput(100, true);
+    auto input = Modbus::DiscreteInput(100, true);
     dataArea.insertDiscreteInput(input);
     auto retrievedInput = dataArea.getDiscreteInputs(100, 1);
     ASSERT_TRUE(retrievedInput.size() == 1);
@@ -36,7 +37,7 @@ TEST(ModbusDataAreaTest, InsertAndRetrieveDiscreteInput) {
 
 TEST(ModbusDataAreaTest, InsertAndRetrieveHoldingRegister) {
     ModbusDataArea dataArea;
-    auto holdingRegister = ModbusHoldingRegister(20, 1000);
+    auto holdingRegister = Modbus::HoldingRegister(20, 1000);
     dataArea.insertHoldingRegister(holdingRegister);
     auto retrievedRegister = dataArea.getHoldingRegisters(20, 1).front();
     ASSERT_TRUE(retrievedRegister.getAddress() == 20);
@@ -46,7 +47,7 @@ TEST(ModbusDataAreaTest, InsertAndRetrieveHoldingRegister) {
 
 TEST(ModbusDataAreaTest, InsertAndRetrieveInputRegister) {
     ModbusDataArea dataArea;
-    auto inputRegister = ModbusInputRegister(10, 1000);
+    auto inputRegister = Modbus::InputRegister(10, 1000);
     dataArea.insertInputRegister(inputRegister);
     auto retrievedRegister = dataArea.getInputRegisters(10, 1).front();
     ASSERT_TRUE(retrievedRegister.getAddress() == 10);
@@ -75,8 +76,8 @@ TEST(ModbusDataAreaTest, RetrieveNonExistentInputRegisterThrowsException) {
 
 TEST(ModbusDataAreaTest, InsertAndRetrieveMultipleCoils) {
     ModbusDataArea dataArea;
-    auto coil1 = ModbusCoil(1, true);
-    auto coil2 = ModbusCoil(2, false);
+    auto coil1 = Modbus::Coil(1, true);
+    auto coil2 = Modbus::Coil(2, false);
     dataArea.insertCoil(coil1);
     dataArea.insertCoil(coil2);
     auto retrievedCoils = dataArea.getCoils(1, 2);
@@ -89,8 +90,8 @@ TEST(ModbusDataAreaTest, InsertAndRetrieveMultipleCoils) {
 
 TEST(ModbusDataAreaTest, InsertAndRetrieveMultipleDiscreteInputs) {
     ModbusDataArea dataArea;
-    auto input1 = ModbusDiscreteInput(100, true);
-    auto input2 = ModbusDiscreteInput(101, false);
+    auto input1 = Modbus::DiscreteInput(100, true);
+    auto input2 = Modbus::DiscreteInput(101, false);
     dataArea.insertDiscreteInput(input1);
     dataArea.insertDiscreteInput(input2);
     auto retrievedInputs = dataArea.getDiscreteInputs(100, 2);
@@ -103,8 +104,8 @@ TEST(ModbusDataAreaTest, InsertAndRetrieveMultipleDiscreteInputs) {
 
 TEST(ModbusDataAreaTest, InsertAndRetrieveMultipleHoldingRegisters) {
     ModbusDataArea dataArea;
-    auto holdingRegister1 = ModbusHoldingRegister(20, 1000);
-    auto holdingRegister2 = ModbusHoldingRegister(21, 2000);
+    auto holdingRegister1 = Modbus::HoldingRegister(20, 1000);
+    auto holdingRegister2 = Modbus::HoldingRegister(21, 2000);
     dataArea.insertHoldingRegister(holdingRegister1);
     dataArea.insertHoldingRegister(holdingRegister2);
     auto retrievedRegisters = dataArea.getHoldingRegisters(20, 2);
@@ -118,8 +119,8 @@ TEST(ModbusDataAreaTest, InsertAndRetrieveMultipleHoldingRegisters) {
 
 TEST(ModbusDataAreaTest, InsertAndRetrieveMultipleInputRegisters) {
     ModbusDataArea dataArea;
-    auto inputRegister1 = ModbusInputRegister(10, 1000);
-    auto inputRegister2 = ModbusInputRegister(11, 2000);
+    auto inputRegister1 = Modbus::InputRegister(10, 1000);
+    auto inputRegister2 = Modbus::InputRegister(11, 2000);
     dataArea.insertInputRegister(inputRegister1);
     dataArea.insertInputRegister(inputRegister2);
     auto retrievedRegisters = dataArea.getInputRegisters(10, 2);
@@ -132,8 +133,8 @@ TEST(ModbusDataAreaTest, InsertAndRetrieveMultipleInputRegisters) {
 
 TEST(ModbusDataAreaTest, SortCoils) {
     ModbusDataArea dataArea;
-    auto coil1 = ModbusCoil(2, true);
-    auto coil2 = ModbusCoil(1, false);
+    auto coil1 = Modbus::Coil(2, true);
+    auto coil2 = Modbus::Coil(1, false);
     dataArea.insertCoil(coil1);
     dataArea.insertCoil(coil2);
     auto retrievedCoils = dataArea.getAllCoils();
@@ -143,8 +144,8 @@ TEST(ModbusDataAreaTest, SortCoils) {
 
 TEST(ModbusDataAreaTest, SortDiscreteInputs) {
     ModbusDataArea dataArea;
-    auto input1 = ModbusDiscreteInput(101, true);
-    auto input2 = ModbusDiscreteInput(100, false);
+    auto input1 = Modbus::DiscreteInput(101, true);
+    auto input2 = Modbus::DiscreteInput(100, false);
     dataArea.insertDiscreteInput(input1);
     dataArea.insertDiscreteInput(input2);
     auto retrievedInputs = dataArea.getAllDiscreteInputs();
@@ -154,8 +155,8 @@ TEST(ModbusDataAreaTest, SortDiscreteInputs) {
 
 TEST(ModbusDataAreaTest, SortHoldingRegisters) {
     ModbusDataArea dataArea;
-    auto holdingRegister1 = ModbusHoldingRegister(21, 1000);
-    auto holdingRegister2 = ModbusHoldingRegister(20, 2000);
+    auto holdingRegister1 = Modbus::HoldingRegister(21, 1000);
+    auto holdingRegister2 = Modbus::HoldingRegister(20, 2000);
     dataArea.insertHoldingRegister(holdingRegister1);
     dataArea.insertHoldingRegister(holdingRegister2);
     auto retrievedRegisters = dataArea.getAllHoldingRegisters();
@@ -165,8 +166,8 @@ TEST(ModbusDataAreaTest, SortHoldingRegisters) {
 
 TEST(ModbusDataAreaTest, SortInputRegisters) {
     ModbusDataArea dataArea;
-    auto inputRegister1 = ModbusInputRegister(11, 1000);
-    auto inputRegister2 = ModbusInputRegister(10, 2000);
+    auto inputRegister1 = Modbus::InputRegister(11, 1000);
+    auto inputRegister2 = Modbus::InputRegister(10, 2000);
     dataArea.insertInputRegister(inputRegister1);
     dataArea.insertInputRegister(inputRegister2);
     auto retrievedRegisters = dataArea.getAllInputRegisters();
@@ -177,24 +178,24 @@ TEST(ModbusDataAreaTest, SortInputRegisters) {
 TEST(ModbusDataAreaTest, InsertCoilThrowsExceptionWhenMaxCoilsExceeded) {
     ModbusDataArea dataArea;
     for (int i = 1; i < MAX_COILS + 1; i++) {
-        ASSERT_NO_THROW(dataArea.insertCoil(ModbusCoil(i, true)));
+        ASSERT_NO_THROW(dataArea.insertCoil(Modbus::Coil(i, true)));
     }
-    ASSERT_THROW(dataArea.insertCoil(ModbusCoil(2001, true)), std::range_error);
+    ASSERT_THROW(dataArea.insertCoil(Modbus::Coil(2001, true)), std::range_error);
 }
 
 TEST(ModbusDataAreaTest, InsertInputRegisterThorwsExceptionWhenMaxInputRegistersExceeded) {
     ModbusDataArea dataArea;
     for (int i = 1; i < MAX_INPUT_REGISTERS + 1; i++) {
-        ASSERT_NO_THROW(dataArea.insertInputRegister(ModbusInputRegister(i, 1000)));
+        ASSERT_NO_THROW(dataArea.insertInputRegister(Modbus::InputRegister(i, 1000)));
     }
-    ASSERT_THROW(dataArea.insertInputRegister(ModbusInputRegister(2001, 1000)), std::range_error);
+    ASSERT_THROW(dataArea.insertInputRegister(Modbus::InputRegister(2001, 1000)), std::range_error);
 }
 
 // TODO Fix fixture tests. They are getting frozen.
 TEST_F(ModbusDataAreaTestWithFixture, generateCoilsWithZeros) {
     modbusDataArea->generateCoils(0, 10, ValueGenerationType::Zeros);
     auto coils = modbusDataArea->getCoils(0, 10);
-    for (ModbusCoil coil : coils) {
+    for (Modbus::Coil coil : coils) {
         EXPECT_EQ(coil.read(), false);
     }
 }
@@ -202,7 +203,7 @@ TEST_F(ModbusDataAreaTestWithFixture, generateCoilsWithZeros) {
 TEST_F(ModbusDataAreaTestWithFixture, generateDiscreteInputsWithOnes) {
     modbusDataArea->generateDiscreteInputs(0, 10, ValueGenerationType::Ones);
     auto inputs = modbusDataArea->getDiscreteInputs(0, 10);
-    for (ModbusDiscreteInput input : inputs) {
+    for (Modbus::DiscreteInput input : inputs) {
         EXPECT_EQ(input.read(), true);
     }
 }

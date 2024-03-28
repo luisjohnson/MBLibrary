@@ -33,7 +33,7 @@ public:
      */
     explicit ModbusPDU(std::vector<std::byte> rawData, std::shared_ptr<ModbusDataArea> modbusDataArea);
 
-    ModbusPDU(ModbusFunctionCode functionCode, std::vector<std::byte> data,
+    ModbusPDU(Modbus::FunctionCode functionCode, std::vector<std::byte> data,
               std::shared_ptr<ModbusDataArea> modbusDataArea);
 
 
@@ -42,7 +42,7 @@ public:
      *
      * @return The Modbus function code.
      */
-    ModbusFunctionCode getFunctionCode();
+    Modbus::FunctionCode getFunctionCode();
 
 
     /**
@@ -59,7 +59,7 @@ public:
 
 private:
     std::vector<std::byte> _data;
-    ModbusFunctionCode _functionCode;
+    Modbus::FunctionCode _functionCode;
     std::shared_ptr<ModbusDataArea> _modbusDataArea;
 
     /**
@@ -177,7 +177,7 @@ private:
     std::vector<std::byte>
     buildResponseForBooleanRegisters(std::vector<T> &booleanRegisters, int startingAddress, int quantityOfRegisters) {
         // Build the response
-        auto byteCount = calculateBytesFromBits(booleanRegisters.size());
+        auto byteCount = Modbus::calculateBytesFromBits(booleanRegisters.size());
         auto functionCodeByte = static_cast<std::byte>(_functionCode);
         std::vector<std::byte> response(byteCount + 2);
         response[0] = functionCodeByte;
@@ -235,6 +235,6 @@ private:
    * \return The exception response packet as a byte array.
    *
    */
-std::vector<std::byte> buildExceptionResponse(ModbusFunctionCode functionCode, ModbusExceptionCode exceptionCode);
+std::vector<std::byte> buildExceptionResponse(Modbus::FunctionCode functionCode, Modbus::ExceptionCode exceptionCode);
 
 #endif //PDU_H

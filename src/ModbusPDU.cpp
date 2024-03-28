@@ -3,42 +3,42 @@
 
 
 ModbusPDU::ModbusPDU(std::vector<std::byte> rawData, std::shared_ptr<ModbusDataArea> modbusDataArea)
-        : _functionCode(byteToModbusFunctionCode(rawData[0])), _modbusDataArea(std::move(modbusDataArea)) {
+        : _functionCode(Modbus::byteToModbusFunctionCode(rawData[0])), _modbusDataArea(std::move(modbusDataArea)) {
     _data = std::vector<std::byte>(rawData.begin() + 1, rawData.end());
 }
 
-ModbusPDU::ModbusPDU(ModbusFunctionCode functionCode, std::vector<std::byte> data,
+ModbusPDU::ModbusPDU(Modbus::FunctionCode functionCode, std::vector<std::byte> data,
                      std::shared_ptr<ModbusDataArea> modbusDataArea) : _functionCode(functionCode),
                                                                        _data(std::move(data)),
                                                                        _modbusDataArea(std::move(modbusDataArea)) {
 
 }
 
-ModbusFunctionCode ModbusPDU::getFunctionCode() {
+Modbus::FunctionCode ModbusPDU::getFunctionCode() {
     return _functionCode;
 }
 
 std::vector<std::byte> ModbusPDU::buildResponse() {
     switch (_functionCode) {
-        case ModbusFunctionCode::ReadCoils:
+        case Modbus::FunctionCode::ReadCoils:
             return getReadCoilsResponse();
-        case ModbusFunctionCode::ReadDiscreteInputs:
+        case Modbus::FunctionCode::ReadDiscreteInputs:
             return getReadDiscreteInputsResponse();
-        case ModbusFunctionCode::ReadHoldingRegisters:
+        case Modbus::FunctionCode::ReadHoldingRegisters:
             return getReadHoldingRegistersResponse();
-        case ModbusFunctionCode::ReadInputRegister:
+        case Modbus::FunctionCode::ReadInputRegister:
             return getReadInputRegistersResponse();
-        case ModbusFunctionCode::WriteSingleCoil:
+        case Modbus::FunctionCode::WriteSingleCoil:
             return getWriteSingleCoilResponse();
-        case ModbusFunctionCode::WriteSingleRegister:
+        case Modbus::FunctionCode::WriteSingleRegister:
             return getWriteSingleRegisterResponse();
-        case ModbusFunctionCode::WriteMultipleCoils:
+        case Modbus::FunctionCode::WriteMultipleCoils:
             return getWriteMultipleCoilsResponse();
-        case ModbusFunctionCode::WriteMultipleRegisters:
+        case Modbus::FunctionCode::WriteMultipleRegisters:
             return getWriteMultipleRegistersResponse();
         default:
             //  Build exception response for invalid function code
-            return buildExceptionResponse(_functionCode, ModbusExceptionCode::IllegalFunction);
+            return buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalFunction);
     }
 }
 
@@ -48,7 +48,7 @@ std::pair<uint16_t, uint16_t> ModbusPDU::getStartingAddressAndQuantityOfRegister
     return {startingAddress, quantityOfRegisters};
 }
 
-std::vector<std::byte> buildExceptionResponse(ModbusFunctionCode functionCode, ModbusExceptionCode exceptionCode) {
+std::vector<std::byte> buildExceptionResponse(Modbus::FunctionCode functionCode, Modbus::ExceptionCode exceptionCode) {
     return {static_cast<std::byte>(0x80 + static_cast<uint8_t>(functionCode)), static_cast<std::byte>(exceptionCode)};
 }
 
@@ -64,7 +64,7 @@ std::vector<std::byte> ModbusPDU::getReadCoilsResponse() {
         return buildResponseForBooleanRegisters(coils, startingAddress, quantityOfCoils);
     } catch (std::out_of_range &e) {
         // Build response for invalid address
-        return buildExceptionResponse(_functionCode, ModbusExceptionCode::IllegalDataAddress);
+        return buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalDataAddress);
     }
 }
 
@@ -78,7 +78,7 @@ std::vector<std::byte> ModbusPDU::getReadDiscreteInputsResponse() {
         return buildResponseForBooleanRegisters(discreteInputs, startingAddress, quantityOfRegisters);
     } catch (std::out_of_range &e) {
         // Build response for invalid address
-        return buildExceptionResponse(_functionCode, ModbusExceptionCode::IllegalDataAddress);
+        return buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalDataAddress);
     }
 }
 
@@ -93,7 +93,7 @@ std::vector<std::byte> ModbusPDU::getReadHoldingRegistersResponse() {
 
     } catch (std::out_of_range &e) {
         // Build response for invalid address
-        return buildExceptionResponse(_functionCode, ModbusExceptionCode::IllegalDataAddress);
+        return buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalDataAddress);
     }
 }
 
@@ -107,7 +107,7 @@ std::vector<std::byte> ModbusPDU::getReadInputRegistersResponse() {
         return buildResponseForIntegerRegisters(inputRegisters, startingAddress, quantityOfRegisters);
     } catch (std::out_of_range &e) {
         // Build response for invalid address
-        return buildExceptionResponse(_functionCode, ModbusExceptionCode::IllegalDataAddress);
+        return buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalDataAddress);
     }
 }
 
@@ -117,7 +117,7 @@ std::vector<std::byte> ModbusPDU::getWriteSingleCoilResponse() {
     bool coilValue = (value == 0xFF00);
 
     if (value != 0xFF00 && value != 0x0000) {
-        return buildExceptionResponse(_functionCode, ModbusExceptionCode::IllegalDataValue);
+        return buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalDataValue);
     }
 
     try {
@@ -125,7 +125,7 @@ std::vector<std::byte> ModbusPDU::getWriteSingleCoilResponse() {
         coil.write(coilValue);
         return {_data[0], _data[1], _data[2], _data[3], _data[4]};
     } catch (std::out_of_range &e) {
-        return buildExceptionResponse(_functionCode, ModbusExceptionCode::IllegalDataAddress);
+        return buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalDataAddress);
     }
 }
 
@@ -136,7 +136,7 @@ std::vector<std::byte> ModbusPDU::getWriteSingleRegisterResponse() {
         holdingRegister.write(value);
         return {_data[0], _data[1], _data[2], _data[3], _data[4]};
     } catch (std::out_of_range &e) {
-        return buildExceptionResponse(_functionCode, ModbusExceptionCode::IllegalDataAddress);
+        return buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalDataAddress);
     }
 }
 
@@ -162,7 +162,7 @@ std::vector<std::byte> ModbusPDU::getWriteMultipleCoilsResponse() {
         return {_data[0], _data[1], _data[2], _data[3], _data[4]};
 
     } catch (std::out_of_range &e) {
-        return buildExceptionResponse(_functionCode, ModbusExceptionCode::IllegalDataAddress);
+        return buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalDataAddress);
     }
 }
 
@@ -177,6 +177,6 @@ std::vector<std::byte> ModbusPDU::getWriteMultipleRegistersResponse() {
         }
         return {_data[0], _data[1], _data[2], _data[3], _data[4]};
     } catch (std::out_of_range &e) {
-        return buildExceptionResponse(_functionCode, ModbusExceptionCode::IllegalDataAddress);
+        return buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalDataAddress);
     }
 }

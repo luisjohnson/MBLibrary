@@ -57,46 +57,46 @@ public:
     ModbusDataArea();
 
     /**
-     * @brief Inserts a ModbusCoil into the container.
+     * @brief Inserts a Coil into the container.
      *
-     * This function inserts a ModbusCoil object into the container.
-     * The ModbusCoil object is inserted by reference via a shared_ptr.
+     * This function inserts a Coil object into the container.
+     * The Coil object is inserted by reference via a shared_ptr.
      *
-     * @param coil The ModbusCoil object to insert.
+     * @param coil The Coil object to insert.
      */
-    void insertCoil(ModbusCoil coil);
+    void insertCoil(Modbus::Coil coil);
 
 
     /**
      * Inserts a discrete input into the Modbus device.
      *
-     * @param input A shared pointer to a ModbusDiscreteInput object representing the input to be inserted.
+     * @param input A shared pointer to a DiscreteInput object representing the input to be inserted.
      *
-     * @see ModbusDiscreteInput
+     * @see DiscreteInput
      */
-    void insertDiscreteInput(ModbusDiscreteInput input);
+    void insertDiscreteInput(Modbus::DiscreteInput input);
 
     /**
-     * @brief Inserts a ModbusHoldingRegister into the storage.
+     * @brief Inserts a HoldingRegister into the storage.
      *
-     * This function is used to insert a ModbusHoldingRegister object into the storage, represented by a shared_ptr.
+     * This function is used to insert a HoldingRegister object into the storage, represented by a shared_ptr.
      *
-     * @param holdingRegister A shared_ptr to the ModbusHoldingRegister object to be inserted.
+     * @param holdingRegister A shared_ptr to the HoldingRegister object to be inserted.
      */
-    void insertHoldingRegister(ModbusHoldingRegister holdingRegister);
+    void insertHoldingRegister(Modbus::HoldingRegister holdingRegister);
 
     /**
-     * @brief Inserts a ModbusInputRegister into the data area.
+     * @brief Inserts a InputRegister into the data area.
      *
-     * This function is used to insert a ModbusInputRegister into the data area.
+     * This function is used to insert a InputRegister into the data area.
      * If the maximum number of input registers has been reached, a std::range_error
      * exception will be thrown.
      *
-     * @param inputRegister The ModbusInputRegister to be inserted.
+     * @param inputRegister The InputRegister to be inserted.
      *
      * @throws std::range_error Thrown if the maximum number of input registers has been exceeded.
      */
-    void insertInputRegister(ModbusInputRegister inputRegister);
+    void insertInputRegister(Modbus::InputRegister inputRegister);
 
     /**
      * @brief Generates coils in the Modbus data area.
@@ -168,7 +168,7 @@ public:
      * @defgroup Coils Coils
      * @brief Functions related to retrieving all coils
      */
-    std::vector<ModbusCoil> &getAllCoils();
+    std::vector<Modbus::Coil> &getAllCoils();
 
     /**
      * @brief Retrieve the state of all the discrete inputs.
@@ -177,7 +177,7 @@ public:
      *
      * @return A vector of boolean values representing the state of all the discrete inputs.
      */
-    std::vector<ModbusDiscreteInput> &getAllDiscreteInputs();
+    std::vector<Modbus::DiscreteInput> &getAllDiscreteInputs();
 
     /**
      * @brief Retrieves all holding registers from a device.
@@ -187,7 +187,7 @@ public:
      *
      * @return An array containing all holding registers read from the device.
      */
-    std::vector<ModbusHoldingRegister> &getAllHoldingRegisters();
+    std::vector<Modbus::HoldingRegister> &getAllHoldingRegisters();
 
     /**
      * @brief Returns an array of all input registers.
@@ -196,7 +196,7 @@ public:
      *
      * @return An array of input registers.
      */
-    std::vector<ModbusInputRegister> &getAllInputRegisters();
+    std::vector<Modbus::InputRegister> &getAllInputRegisters();
 
     /**
      * @brief Retrieves a range of coil values from a specific start index.
@@ -210,7 +210,7 @@ public:
      * @note The start index should be a non-negative value, and the length should be a positive value.
      * @warning The function does not perform any boundary checks, and accessing out of range indices may lead to undefined behavior.
      */
-    std::vector<ModbusCoil> getCoils(int start, int length);
+    std::vector<Modbus::Coil> getCoils(int start, int length);
 
     /**
      * @brief Gets the discrete inputs from a specific range
@@ -223,7 +223,7 @@ public:
      *
      * @return A vector of bool values representing the discrete inputs
      */
-    std::vector<ModbusDiscreteInput> getDiscreteInputs(int start, int length);
+    std::vector<Modbus::DiscreteInput> getDiscreteInputs(int start, int length);
 
     /**
      * @brief Retrieves holding registers from a device.
@@ -239,7 +239,7 @@ public:
      *       this function. Make sure that the start address and length values
      *       are valid for the device being used.
      */
-    std::vector<ModbusHoldingRegister> getHoldingRegisters(int start, int length);
+    std::vector<Modbus::HoldingRegister> getHoldingRegisters(int start, int length);
 
     /**
      * @brief Get the input registers from a Modbus device.
@@ -251,7 +251,7 @@ public:
      * @param length The number of input registers to retrieve.
      * @return A list of input registers retrieved from the Modbus device.
      */
-    std::vector<ModbusInputRegister> getInputRegisters(int start, int length);
+    std::vector<Modbus::InputRegister> getInputRegisters(int start, int length);
 
     /**
      * @brief Retrieves a shared pointer to the ModbusDataArea object.
@@ -269,10 +269,10 @@ public:
 
 private:
 
-    std::vector<ModbusCoil> _coils;
-    std::vector<ModbusDiscreteInput> _discreteInputs;
-    std::vector<ModbusHoldingRegister> _holdingRegisters;
-    std::vector<ModbusInputRegister> _inputRegisters;
+    std::vector<Modbus::Coil> _coils;
+    std::vector<Modbus::DiscreteInput> _discreteInputs;
+    std::vector<Modbus::HoldingRegister> _holdingRegisters;
+    std::vector<Modbus::InputRegister> _inputRegisters;
     std::mutex _mutex;
 
     /**
@@ -366,9 +366,9 @@ private:
 
 
     /**
-     * @brief Generates a series of boolean registers of type `ModbusCoil` or `ModbusDiscreteInput` based on the specified value generation type.
+     * @brief Generates a series of boolean registers of type `Coil` or `DiscreteInput` based on the specified value generation type.
      *
-     * @tparam T The type of register (ModbusCoil or ModbusDiscreteInput).
+     * @tparam T The type of register (Coil or DiscreteInput).
      * @param registers The vector of registers to store the generated registers.
      * @param startAddress The starting address for the generated registers.
      * @param count The number of registers to generate.
@@ -376,7 +376,7 @@ private:
      *
      * @throws std::invalid_argument if an invalid value generation type is provided.
      *
-     * This function generates boolean registers of the specified type (`ModbusCoil` or `ModbusDiscreteInput`) and inserts them into the provided vector `registers`.
+     * This function generates boolean registers of the specified type (`Coil` or `DiscreteInput`) and inserts them into the provided vector `registers`.
      * The generation of the registers depends on the specified value generation type. Supported value generation types are Zeros, Ones, and Random.
      *
      * If the value generation type is Zeros, the function generates registers with a value of `false` and inserts them into the vector `registers`.
@@ -388,14 +388,14 @@ private:
      * Example usage:
      *
      * ```cpp
-     * std::vector<ModbusCoil> registers;
+     * std::vector<Coil> registers;
      * generateBooleanRegisters(registers, 1000, 10, ValueGenerationType::Random);
      * ```
      */
     template<typename T>
     void generateBooleanRegisters(std::vector<T> &registers, int startAddress, int count, ValueGenerationType type) {
-        static_assert(std::is_same<T, ModbusCoil>::value || std::is_same<T, ModbusDiscreteInput>::value,
-                      "Invalid register type, register type must be ModbusCoil or ModbusDiscreteInput.");
+        static_assert(std::is_same<T, Modbus::Coil>::value || std::is_same<T, Modbus::DiscreteInput>::value,
+                      "Invalid register type, register type must be Coil or DiscreteInput.");
         std::lock_guard<std::mutex> lock(_mutex);
         switch (type) {
             case ValueGenerationType::Zeros:
@@ -441,12 +441,12 @@ private:
      * - Incremental: generates registers with values in incremental order (from 0 to count-1).
      *
      * \throws std::invalid_argument if an invalid value generation type is provided.
-     * \throws std::invalid_argument if an invalid register type is provided (must be ModbusHoldingRegister or ModbusInputRegister).
+     * \throws std::invalid_argument if an invalid register type is provided (must be HoldingRegister or InputRegister).
      */
     template<typename T>
     void generateIntegerRegisters(std::vector<T> &registers, int startAddress, int count, ValueGenerationType type) {
-        static_assert(std::is_same<T, ModbusHoldingRegister>::value || std::is_same<T, ModbusInputRegister>::value,
-                      "Invalid register type, register type must be ModbusHoldingRegister or ModbusInputRegister.");
+        static_assert(std::is_same<T, Modbus::HoldingRegister>::value || std::is_same<T, Modbus::InputRegister>::value,
+                      "Invalid register type, register type must be HoldingRegister or InputRegister.");
         std::lock_guard<std::mutex> lock(_mutex);
         switch (type) {
             case ValueGenerationType::Zeros:

@@ -8,13 +8,13 @@
 
 class ModbusPDUTest : public ::testing::Test {
 protected:
-    std::vector<ModbusCoil> coils;
-    std::vector<ModbusDiscreteInput> discreteInputs;
-    std::vector<ModbusHoldingRegister> holdingRegisters;
-    std::vector<ModbusInputRegister> inputRegisters;
+    std::vector<Modbus::Coil> coils;
+    std::vector<Modbus::DiscreteInput> discreteInputs;
+    std::vector<Modbus::HoldingRegister> holdingRegisters;
+    std::vector<Modbus::InputRegister> inputRegisters;
 
-    std::vector<ModbusInputRegister> emptyInputRegisters{};
-    std::vector<ModbusHoldingRegister> emptyHoldingRegisters{};
+    std::vector<Modbus::InputRegister> emptyInputRegisters{};
+    std::vector<Modbus::HoldingRegister> emptyHoldingRegisters{};
     std::shared_ptr<ModbusDataArea> modbusDataArea = std::make_shared<ModbusDataArea>();
 
     void SetUp() override {
@@ -25,16 +25,16 @@ protected:
             discreteInputs.emplace_back(i, i % 2 == 0);
         }
 
-        holdingRegisters = {ModbusHoldingRegister(1, 0x1234), ModbusHoldingRegister(2, 0x5678)};
-        inputRegisters = {ModbusInputRegister(1, 0x9ABC), ModbusInputRegister(2, 0xDEF0)};
+        holdingRegisters = {Modbus::HoldingRegister(1, 0x1234), Modbus::HoldingRegister(2, 0x5678)};
+        inputRegisters = {Modbus::InputRegister(1, 0x9ABC), Modbus::InputRegister(2, 0xDEF0)};
 
 
         for (int i = 1; i < 11; ++i) {
-            auto coil = ModbusCoil(i, true);
-            modbusDataArea->insertCoil(ModbusCoil(i, i % 2 == 0));
-            modbusDataArea->insertDiscreteInput(ModbusDiscreteInput(i, i % 2 == 0));
-            modbusDataArea->insertHoldingRegister(ModbusHoldingRegister(i, i));
-            modbusDataArea->insertInputRegister(ModbusInputRegister(i, i));
+            auto coil = Modbus::Coil(i, true);
+            modbusDataArea->insertCoil(Modbus::Coil(i, i % 2 == 0));
+            modbusDataArea->insertDiscreteInput(Modbus::DiscreteInput(i, i % 2 == 0));
+            modbusDataArea->insertHoldingRegister(Modbus::HoldingRegister(i, i));
+            modbusDataArea->insertInputRegister(Modbus::InputRegister(i, i));
         }
     }
 };
@@ -122,7 +122,7 @@ TEST_F(ModbusPDUTest, ReadCoilsCorrectDataForMaxRegisters) {
 
     while (modbusDataArea->getAllCoils().size() < 2000) {
         int prevAddress = modbusDataArea->getAllCoils().back().getAddress();
-        modbusDataArea->insertCoil(ModbusCoil(prevAddress + 1, true));
+        modbusDataArea->insertCoil(Modbus::Coil(prevAddress + 1, true));
     }
 
     ModbusPDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD0}},
@@ -216,7 +216,7 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsCorrectDataForMaxRegisters) {
 
     while (modbusDataArea->getAllDiscreteInputs().size() < 2000) {
         int prevAddress = modbusDataArea->getAllDiscreteInputs().back().getAddress();
-        modbusDataArea->insertDiscreteInput(ModbusDiscreteInput(prevAddress + 1, true));
+        modbusDataArea->insertDiscreteInput(Modbus::DiscreteInput(prevAddress + 1, true));
     }
 
     ModbusPDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD0}},
@@ -329,7 +329,7 @@ TEST_F(ModbusPDUTest, ReadHoldingRegistersCorrectDataForMaxRegisters) {
 
     while (modbusDataArea->getAllHoldingRegisters().size() < 125) {
         int prevAddress = modbusDataArea->getAllHoldingRegisters().back().getAddress();
-        modbusDataArea->insertHoldingRegister(ModbusHoldingRegister(prevAddress + 1, prevAddress + 1));
+        modbusDataArea->insertHoldingRegister(Modbus::HoldingRegister(prevAddress + 1, prevAddress + 1));
     }
 
     ModbusPDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{0x00}, std::byte{0x7D}},
@@ -429,7 +429,7 @@ TEST_F(ModbusPDUTest, ReadInputRegisterCorrectDataForMaxRegisters) {
 
     while (modbusDataArea->getAllInputRegisters().size() < 125) {
         int prevAddress = modbusDataArea->getAllInputRegisters().back().getAddress();
-        modbusDataArea->insertInputRegister(ModbusInputRegister(prevAddress + 1, prevAddress + 1));
+        modbusDataArea->insertInputRegister(Modbus::InputRegister(prevAddress + 1, prevAddress + 1));
     }
 
     ModbusPDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{0x00}, std::byte{0x7D}},
