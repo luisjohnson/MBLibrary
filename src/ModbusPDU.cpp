@@ -3,15 +3,15 @@
 #include "ModbusDataArea.h"
 
 
-Modbus::PDU::PDU(std::vector<std::byte> rawData, std::shared_ptr<Modbus::DataArea> modbusDataArea)
-        : _functionCode(Modbus::byteToModbusFunctionCode(rawData[0])), _modbusDataArea(std::move(modbusDataArea)) {
+Modbus::PDU::PDU(std::vector<std::byte> rawData, Modbus::DataArea &modbusDataArea)
+        : _functionCode(Modbus::byteToModbusFunctionCode(rawData[0])), _modbusDataArea(modbusDataArea) {
     _data = std::vector<std::byte>(rawData.begin() + 1, rawData.end());
 }
 
 Modbus::PDU::PDU(Modbus::FunctionCode functionCode, std::vector<std::byte> data,
-                 std::shared_ptr<Modbus::DataArea> modbusDataArea) : _functionCode(functionCode),
-                                                                     _data(std::move(data)),
-                                                                     _modbusDataArea(std::move(modbusDataArea)) {
+                 Modbus::DataArea &modbusDataArea) : _functionCode(functionCode),
+                                                     _data(std::move(data)),
+                                                     _modbusDataArea(modbusDataArea) {
 
 }
 
@@ -56,7 +56,7 @@ std::vector<std::byte> Modbus::PDU::getReadCoilsResponse() {
 
     try {
         // Get the coils from the data area
-        auto coils = _modbusDataArea->getCoils(startingAddress, quantityOfCoils);
+        auto coils = _modbusDataArea.getCoils(startingAddress, quantityOfCoils);
         // Get the response
         return buildResponseForBooleanRegisters(coils, startingAddress, quantityOfCoils);
     } catch (std::out_of_range &e) {
@@ -70,7 +70,7 @@ std::vector<std::byte> Modbus::PDU::getReadDiscreteInputsResponse() {
 
     try {
         // Get the discrete inputs from the data area
-        auto discreteInputs = _modbusDataArea->getDiscreteInputs(startingAddress, quantityOfRegisters);
+        auto discreteInputs = _modbusDataArea.getDiscreteInputs(startingAddress, quantityOfRegisters);
         // Get the response
         return buildResponseForBooleanRegisters(discreteInputs, startingAddress, quantityOfRegisters);
     } catch (std::out_of_range &e) {
@@ -84,7 +84,7 @@ std::vector<std::byte> Modbus::PDU::getReadHoldingRegistersResponse() {
 
     try {
         // Get the holding registers from the data area
-        auto holdingRegisters = _modbusDataArea->getHoldingRegisters(startingAddress, quantityOfRegisters);
+        auto holdingRegisters = _modbusDataArea.getHoldingRegisters(startingAddress, quantityOfRegisters);
         // Get the response
         return buildResponseForIntegerRegisters(holdingRegisters, startingAddress, quantityOfRegisters);
 
@@ -99,7 +99,7 @@ std::vector<std::byte> Modbus::PDU::getReadInputRegistersResponse() {
 
     try {
         // Get the input registers from the data area
-        auto inputRegisters = _modbusDataArea->getInputRegisters(startingAddress, quantityOfRegisters);
+        auto inputRegisters = _modbusDataArea.getInputRegisters(startingAddress, quantityOfRegisters);
         // Get the response
         return buildResponseForIntegerRegisters(inputRegisters, startingAddress, quantityOfRegisters);
     } catch (std::out_of_range &e) {
@@ -118,7 +118,7 @@ std::vector<std::byte> Modbus::PDU::getWriteSingleCoilResponse() {
     }
 
     try {
-        auto coil = _modbusDataArea->getCoils(address, 1).front();
+        auto coil = _modbusDataArea.getCoils(address, 1).front();
         coil.write(coilValue);
         return {_data[0], _data[1], _data[2], _data[3], _data[4]};
     } catch (std::out_of_range &e) {
@@ -129,7 +129,7 @@ std::vector<std::byte> Modbus::PDU::getWriteSingleCoilResponse() {
 std::vector<std::byte> Modbus::PDU::getWriteSingleRegisterResponse() {
     auto [address, value] = getStartingAddressAndQuantityOfRegisters();
     try {
-        auto holdingRegister = _modbusDataArea->getHoldingRegisters(address, 1).front();
+        auto holdingRegister = _modbusDataArea.getHoldingRegisters(address, 1).front();
         holdingRegister.write(value);
         return {_data[0], _data[1], _data[2], _data[3], _data[4]};
     } catch (std::out_of_range &e) {
@@ -151,7 +151,7 @@ std::vector<std::byte> Modbus::PDU::getWriteMultipleCoilsResponse() {
     }
 
     try {
-        auto coils = _modbusDataArea->getCoils(startingAddress, quantityOfCoils);
+        auto coils = _modbusDataArea.getCoils(startingAddress, quantityOfCoils);
         for (int i = 0; i < quantityOfCoils; ++i) {
             coils[i].write(unpackedBooleans[i]);
         }
@@ -167,7 +167,7 @@ std::vector<std::byte> Modbus::PDU::getWriteMultipleRegistersResponse() {
     auto [startingAddress, quantityOfRegisters] = getStartingAddressAndQuantityOfRegisters();
     auto byteCount = static_cast<int>(_data[6]);
     try {
-        auto holdingRegisters = _modbusDataArea->getHoldingRegisters(startingAddress, quantityOfRegisters);
+        auto holdingRegisters = _modbusDataArea.getHoldingRegisters(startingAddress, quantityOfRegisters);
         for (int i = 0; i < quantityOfRegisters; ++i) {
             auto value = Modbus::Utilities::twoBytesToUint16(_data[7 + i * 2], _data[8 + i * 2]);
             holdingRegisters[i].write(value);

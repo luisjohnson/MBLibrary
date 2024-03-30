@@ -31,10 +31,10 @@ namespace Modbus {
          * the contents of the PDU. It is used in conjunction with DataArea to assist in
          * Modbus communication.
          */
-        explicit PDU(std::vector<std::byte> rawData, std::shared_ptr<DataArea> modbusDataArea);
+        explicit PDU(std::vector<std::byte> rawData, Modbus::DataArea &modbusDataArea);
 
-        PDU(FunctionCode functionCode, std::vector<std::byte> data,
-            std::shared_ptr<DataArea> modbusDataArea);
+        PDU(Modbus::FunctionCode functionCode, std::vector<std::byte> data,
+            Modbus::DataArea &modbusDataArea);
 
 
         /**
@@ -59,7 +59,7 @@ namespace Modbus {
     private:
         std::vector<std::byte> _data;
         FunctionCode _functionCode;
-        std::shared_ptr<DataArea> _modbusDataArea;
+        DataArea &_modbusDataArea;
 
         /**
          * @brief Retrieves the starting address and quantity of registers.
@@ -237,7 +237,8 @@ namespace Modbus {
      * auto response = Modbus::buildExceptionResponse(Modbus::FunctionCode::ReadCoils, Modbus::ExceptionCode::IllegalDataAddress);
      * @endcode
      */
-    std::vector<std::byte> buildExceptionResponse(Modbus::FunctionCode functionCode, Modbus::ExceptionCode exceptionCode);
+    std::vector<std::byte>
+    buildExceptionResponse(Modbus::FunctionCode functionCode, Modbus::ExceptionCode exceptionCode);
 }
 
 

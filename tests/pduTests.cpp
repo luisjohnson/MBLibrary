@@ -15,7 +15,7 @@ protected:
 
     std::vector<Modbus::InputRegister> emptyInputRegisters{};
     std::vector<Modbus::HoldingRegister> emptyHoldingRegisters{};
-    std::shared_ptr<Modbus::DataArea> modbusDataArea = std::make_shared<Modbus::DataArea>();
+    Modbus::DataArea modbusDataArea{};
 
     void SetUp() override {
 
@@ -31,10 +31,10 @@ protected:
 
         for (int i = 1; i < 11; ++i) {
             auto coil = Modbus::Coil(i, true);
-            modbusDataArea->insertCoil(Modbus::Coil(i, i % 2 == 0));
-            modbusDataArea->insertDiscreteInput(Modbus::DiscreteInput(i, i % 2 == 0));
-            modbusDataArea->insertHoldingRegister(Modbus::HoldingRegister(i, i));
-            modbusDataArea->insertInputRegister(Modbus::InputRegister(i, i));
+            modbusDataArea.insertCoil(Modbus::Coil(i, i % 2 == 0));
+            modbusDataArea.insertDiscreteInput(Modbus::DiscreteInput(i, i % 2 == 0));
+            modbusDataArea.insertHoldingRegister(Modbus::HoldingRegister(i, i));
+            modbusDataArea.insertInputRegister(Modbus::InputRegister(i, i));
         }
     }
 };
@@ -109,7 +109,7 @@ TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsExceptionForInvalidQuantity) {
 TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsExceptionForRangeExceedingMax) {
 
     Modbus::PDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
-                    std::make_shared<Modbus::DataArea>());
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -120,9 +120,9 @@ TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsExceptionForRangeExceedingMax) {
 
 TEST_F(ModbusPDUTest, ReadCoilsCorrectDataForMaxRegisters) {
 
-    while (modbusDataArea->getAllCoils().size() < 2000) {
-        int prevAddress = modbusDataArea->getAllCoils().back().getAddress();
-        modbusDataArea->insertCoil(Modbus::Coil(prevAddress + 1, true));
+    while (modbusDataArea.getAllCoils().size() < 2000) {
+        int prevAddress = modbusDataArea.getAllCoils().back().getAddress();
+        modbusDataArea.insertCoil(Modbus::Coil(prevAddress + 1, true));
     }
 
     Modbus::PDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD0}},
@@ -203,7 +203,7 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidQuanti
 TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForRangeExceedingMax) {
 
     Modbus::PDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
-                    std::make_shared<Modbus::DataArea>());
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -214,9 +214,9 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForRangeExceedin
 
 TEST_F(ModbusPDUTest, ReadDiscreteInputsCorrectDataForMaxRegisters) {
 
-    while (modbusDataArea->getAllDiscreteInputs().size() < 2000) {
-        int prevAddress = modbusDataArea->getAllDiscreteInputs().back().getAddress();
-        modbusDataArea->insertDiscreteInput(Modbus::DiscreteInput(prevAddress + 1, true));
+    while (modbusDataArea.getAllDiscreteInputs().size() < 2000) {
+        int prevAddress = modbusDataArea.getAllDiscreteInputs().back().getAddress();
+        modbusDataArea.insertDiscreteInput(Modbus::DiscreteInput(prevAddress + 1, true));
     }
 
     Modbus::PDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD0}},
@@ -233,7 +233,7 @@ TEST_F(ModbusPDUTest, ReadDiscreteInputsCorrectDataForMaxRegisters) {
 TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidFunctionCode) {
 
     Modbus::PDU pdu({std::byte{0x2C}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
-                    std::make_shared<Modbus::DataArea>());
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -316,7 +316,7 @@ TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForInvalidQuan
 TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForRangeExceedingMax) {
 
     Modbus::PDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
-                    std::make_shared<Modbus::DataArea>());
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -327,9 +327,9 @@ TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForRangeExceed
 
 TEST_F(ModbusPDUTest, ReadHoldingRegistersCorrectDataForMaxRegisters) {
 
-    while (modbusDataArea->getAllHoldingRegisters().size() < 125) {
-        int prevAddress = modbusDataArea->getAllHoldingRegisters().back().getAddress();
-        modbusDataArea->insertHoldingRegister(Modbus::HoldingRegister(prevAddress + 1, prevAddress + 1));
+    while (modbusDataArea.getAllHoldingRegisters().size() < 125) {
+        int prevAddress = modbusDataArea.getAllHoldingRegisters().back().getAddress();
+        modbusDataArea.insertHoldingRegister(Modbus::HoldingRegister(prevAddress + 1, prevAddress + 1));
     }
 
     Modbus::PDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{0x00}, std::byte{0x7D}},
@@ -416,7 +416,7 @@ TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForInvalidQuantit
 TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForRangeExceedingMax) {
 
     Modbus::PDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
-                    std::make_shared<Modbus::DataArea>());
+                    modbusDataArea);
 
     auto response = pdu.buildResponse();
 
@@ -427,9 +427,9 @@ TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForRangeExceeding
 
 TEST_F(ModbusPDUTest, ReadInputRegisterCorrectDataForMaxRegisters) {
 
-    while (modbusDataArea->getAllInputRegisters().size() < 125) {
-        int prevAddress = modbusDataArea->getAllInputRegisters().back().getAddress();
-        modbusDataArea->insertInputRegister(Modbus::InputRegister(prevAddress + 1, prevAddress + 1));
+    while (modbusDataArea.getAllInputRegisters().size() < 125) {
+        int prevAddress = modbusDataArea.getAllInputRegisters().back().getAddress();
+        modbusDataArea.insertInputRegister(Modbus::InputRegister(prevAddress + 1, prevAddress + 1));
     }
 
     Modbus::PDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{0x00}, std::byte{0x7D}},

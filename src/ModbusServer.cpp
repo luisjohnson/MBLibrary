@@ -9,6 +9,7 @@
 #include <iostream>
 
 Modbus::Server::Server::Server(Modbus::DataArea &dataArea) : _modbusDataArea(dataArea) {
+    _ioContext.run();
 }
 
 void Modbus::Server::Server::start() {
@@ -18,6 +19,7 @@ void Modbus::Server::Server::start() {
 
 void Modbus::Server::Server::stop() {
     _acceptor.close();
+    _ioContext.stop();
 }
 
 boost::asio::awaitable<void> Modbus::Server::Server::listener() {
@@ -32,15 +34,17 @@ boost::asio::awaitable<void> Modbus::Server::Server::listener() {
 boost::asio::awaitable<void> Modbus::Server::Server::session(tcp::socket socket) {
     try {
         for (;;) {
-            std::vector<std::byte> data;
+            std::array<std::byte, 1024> data{};
             std::size_t n = co_await socket.async_read_some(boost::asio::buffer(data),
                                                             boost::asio::use_awaitable);
-//            std::cout << "Received " << n << " bytes" << std::endl;
-//            Modbus::PDU pdu(data, _modbusDataArea.getShared());
+            std::cout << "Received " << n << " bytes" << std::endl;
+//            std::vector<std::byte> bytes(data.size());
+//            std::copy(data.begin(), data.end(), bytes.begin());
+//            Modbus::PDU pdu(bytes, _modbusDataArea);
 //            auto response = pdu.buildResponse();
 
-            co_await boost::asio::async_write(socket, boost::asio::buffer(data, n),
-                                              boost::asio::use_awaitable);
+//            co_await boost::asio::async_write(socket, boost::asio::buffer(response, n),
+//                                              boost::asio::use_awaitable);
         }
     } catch (std::exception &e) {
         std::cerr << "Error: " << e.what() << std::endl;

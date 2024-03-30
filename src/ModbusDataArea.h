@@ -41,7 +41,7 @@ namespace Modbus {
      * thread-safety by using a shared mutex to control access to the data. It also provides methods for
      * inserting, retrieving, and modifying the registers and coils.
      */
-    class DataArea : public std::enable_shared_from_this<DataArea> {
+    class DataArea  {
     public:
         /**
          * @class DataArea
@@ -249,19 +249,6 @@ namespace Modbus {
          * @return A list of input registers retrieved from the Modbus device.
          */
         std::vector<InputRegister> getInputRegisters(int start, int length);
-
-        /**
-         * @brief Retrieves a shared pointer to the DataArea object.
-         *
-         * This function returns a shared pointer to the DataArea object.
-         * The DataArea class represents a data area for storing Modbus registers and coils. It ensures thread-safety
-         * by using a shared mutex to control access to the data. Clients can use this function to obtain a shared pointer
-         * to the DataArea object and safely access its methods and members.
-         *
-         *
-         * @return std::shared_ptr<DataArea> A shared pointer to the DataArea object.
-         */
-        std::shared_ptr<DataArea> getShared();
 
 
     private:

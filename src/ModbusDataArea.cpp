@@ -62,14 +62,9 @@ std::vector<Modbus::InputRegister> Modbus::DataArea::getInputRegisters(int start
     return getRegisters(_inputRegisters, start, length);
 }
 
-std::shared_ptr<Modbus::DataArea> Modbus::DataArea::getShared() {
-    return shared_from_this();
-}
-
 void Modbus::DataArea::generateCoils(int startAddress, int count, Modbus::ValueGenerationType type) {
     generateBooleanRegisters(_coils, startAddress, count, type);
 }
-
 
 void Modbus::DataArea::generateDiscreteInputs(int startAddress, int count, Modbus::ValueGenerationType type) {
     generateBooleanRegisters(_discreteInputs, startAddress, count, type);
@@ -82,4 +77,3 @@ void Modbus::DataArea::generateHoldingRegisters(int startAddress, int count, Mod
 void Modbus::DataArea::generateInputRegisters(int startAddress, int count, Modbus::ValueGenerationType type) {
     generateIntegerRegisters(_inputRegisters, startAddress, count, type);
 }
-

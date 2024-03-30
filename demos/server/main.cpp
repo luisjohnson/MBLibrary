@@ -12,11 +12,10 @@ int main() {
     dataArea.generateHoldingRegisters(0, 128, Modbus::ValueGenerationType::Random);
 
     Modbus::Server::Server server(dataArea);
+    server.start();
 
-    for(;;)
-    {
-        server.start();
-    }
+
+    for (;;) {}
 
     return 0;
 }
