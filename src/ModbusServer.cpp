@@ -9,12 +9,12 @@
 #include <iostream>
 
 Modbus::Server::Server::Server(Modbus::DataArea &dataArea) : _modbusDataArea(dataArea) {
-    _ioContext.run();
 }
 
 void Modbus::Server::Server::start() {
     boost::asio::co_spawn(_acceptor.get_executor(), [this]() { return listener(); },
                           boost::asio::detached);
+    _ioContext.run();
 }
 
 void Modbus::Server::Server::stop() {
@@ -38,16 +38,15 @@ boost::asio::awaitable<void> Modbus::Server::Server::session(tcp::socket socket)
             std::size_t n = co_await socket.async_read_some(boost::asio::buffer(data),
                                                             boost::asio::use_awaitable);
             std::cout << "Received " << n << " bytes" << std::endl;
-//            std::vector<std::byte> bytes(data.size());
-//            std::copy(data.begin(), data.end(), bytes.begin());
-//            Modbus::PDU pdu(bytes, _modbusDataArea);
-//            auto response = pdu.buildResponse();
+            std::vector<std::byte> bytes(n);
+            std::copy(data.begin(), data.begin() + n, bytes.begin());
+            Modbus::PDU pdu(bytes, _modbusDataArea);
+            auto response = pdu.buildResponse();
 
-//            co_await boost::asio::async_write(socket, boost::asio::buffer(response, n),
-//                                              boost::asio::use_awaitable);
+            co_await boost::asio::async_write(socket, boost::asio::buffer(response, n),
+                                              boost::asio::use_awaitable);
         }
     } catch (std::exception &e) {
         std::cerr << "Error: " << e.what() << std::endl;
-//        Logger::error(e.what());
     }
 }
