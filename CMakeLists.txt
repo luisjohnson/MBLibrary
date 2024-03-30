@@ -18,15 +18,15 @@ else ()
     add_library(MBLibrary STATIC
             src/Modbus.cpp
             src/Modbus.h
-            src/PDU.cpp
-            src/PDU.h
+            src/ModbusPDU.cpp
+            src/ModbusPDU.h
             src/ModbusDataArea.cpp
             src/ModbusDataArea.h
             src/ModbusUtilities.cpp
             src/ModbusUtilities.h
             src/Logger.h
-            src/Server.cpp
-            src/Server.h)
+            src/ModbusServer.cpp
+            src/ModbusServer.h)
     target_include_directories(MBLibrary PUBLIC src ${BOOST_LIBRARIES})
 
     add_executable(runTests tests/pduTests.cpp)
