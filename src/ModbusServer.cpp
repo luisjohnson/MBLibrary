@@ -4,9 +4,9 @@
 
 #include <cstddef>
 #include <vector>
-#include "Logger.h"
 #include "ModbusServer.h"
 #include "ModbusPDU.h"
+#include <iostream>
 
 Modbus::Server::Server::Server(Modbus::DataArea &dataArea) : _modbusDataArea(dataArea) {
 }
@@ -35,13 +35,15 @@ boost::asio::awaitable<void> Modbus::Server::Server::session(tcp::socket socket)
             std::vector<std::byte> data;
             std::size_t n = co_await socket.async_read_some(boost::asio::buffer(data),
                                                             boost::asio::use_awaitable);
-            Modbus::PDU pdu(data, _modbusDataArea.getShared());
-            auto response = pdu.buildResponse();
+//            std::cout << "Received " << n << " bytes" << std::endl;
+//            Modbus::PDU pdu(data, _modbusDataArea.getShared());
+//            auto response = pdu.buildResponse();
 
-            co_await boost::asio::async_write(socket, boost::asio::buffer(response, n),
+            co_await boost::asio::async_write(socket, boost::asio::buffer(data, n),
                                               boost::asio::use_awaitable);
         }
     } catch (std::exception &e) {
-        Logger::error(e.what());
+        std::cerr << "Error: " << e.what() << std::endl;
+//        Logger::error(e.what());
     }
 }
