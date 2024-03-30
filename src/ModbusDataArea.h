@@ -63,7 +63,6 @@ namespace Modbus {
          */
         void insertCoil(Coil coil);
 
-
         /**
          * Inserts a discrete input into the Modbus device.
          *
@@ -297,6 +296,8 @@ namespace Modbus {
         template<typename T>
         void insertRegister(std::vector<T> &registers, T reg) {
             std::lock_guard<std::mutex> lock(_mutex);
+            if (registerExists(registers, reg.getAddress()))
+                throw std::invalid_argument("Register with address " + reg.getAddressWithPrefix() + " already exists");
             registers.push_back(reg);
             if (registers.size() > 1)
                 std::ranges::sort(registers, [](const auto &a, const auto &b) {
@@ -476,6 +477,29 @@ namespace Modbus {
                     throw std::invalid_argument("Invalid value generation type.");
             }
 
+        }
+
+        /**
+         * @brief Checks if a register with the specified address already exists in the given vector of registers.
+         *
+         * @tparam T The type of register to check.
+         * @param registers The vector of registers to check.
+         * @param address The address of the register to check.
+         * @return true if a register with the specified address exists in the vector, false otherwise.
+         * @par
+         * Example usage:
+         * ```cpp
+         * std::vector<Coil> coils;
+         * bool exists = registerExists(coils, 100);
+         * ```
+         * In this example, the function will return true if a Coil object with address 100 exists in the 'coils' vector.
+         */
+        template<typename T>
+        bool registerExists(const std::vector<T> &registers, int address) {
+            auto it = std::find_if(registers.begin(), registers.end(), [address](const T &reg) {
+                return reg.getAddress() == address;
+            });
+            return it != registers.end();
         }
     };
 }

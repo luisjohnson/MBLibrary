@@ -106,21 +106,27 @@ namespace Modbus {
      */
     FunctionCode byteToModbusFunctionCode(std::byte b);
 
-    /**
-         * @class InvalidFunctionCodeException
-         * @brief An exception class for indicating an invalid Modbus function code.
-         *
-         * This exception is thrown when an invalid Modbus function code is provided.
-         * It inherits from std::exception and overrides the what() method to provide
-         * a description of the exception.
-         */
-    class InvalidFunctionCodeException : std::exception {
-    public:
-        const char *what() const noexcept override {
-            return "Invalid Modbus function code provided.";
-        }
-    };
-
+//    /**
+//         * @class InvalidFunctionCodeException
+//         * @brief An exception class for indicating an invalid Modbus function code.
+//         *
+//         * This exception is thrown when an invalid Modbus function code is provided.
+//         * It inherits from std::exception and overrides the what() method to provide
+//         * a description of the exception.
+//         */
+//    class InvalidFunctionCodeException : std::exception {
+//    public:
+//        const char *what() const noexcept override {
+//            return "Invalid Modbus function code provided.";
+//        }
+//    };
+//
+//    class RegisterExistsException : std::exception {
+//    public:
+//        const char *what() const noexcept override {
+//            return "Register already exists.";
+//        }
+//    };
 
     /**
      * @brief Fill the given value with zeros until it reaches the specified length.

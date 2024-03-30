@@ -191,6 +191,14 @@ TEST(ModbusDataAreaTest, InsertInputRegisterThorwsExceptionWhenMaxInputRegisters
     ASSERT_THROW(dataArea.insertInputRegister(Modbus::InputRegister(2001, 1000)), std::range_error);
 }
 
+TEST(ModbusDataAreaTest, RegisterExists) {
+    Modbus::DataArea dataArea;
+    for (int i = 0; i < 10 + 1; i++) {
+        ASSERT_NO_THROW(dataArea.insertHoldingRegister(Modbus::HoldingRegister(i, 1000)));
+    }
+    ASSERT_THROW(dataArea.insertHoldingRegister(Modbus::HoldingRegister(1, 1000)), std::invalid_argument);
+}
+
 TEST_F(ModbusDataAreaTestWithFixture, generateCoilsWithZeros) {
     modbusDataArea->generateCoils(0, 10, Modbus::ValueGenerationType::Zeros);
     auto coils = modbusDataArea->getCoils(0, 10);
