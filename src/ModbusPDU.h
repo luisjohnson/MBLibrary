@@ -13,6 +13,41 @@
 #include "ModbusUtilities.h"
 
 namespace Modbus {
+
+    /**
+     * @file MBAP.h
+     *
+     * @brief This file contains the declaration of the MBAP struct.
+     */
+    struct MBAP {
+        uint16_t transactionIdentifier;
+        uint16_t protocolIdentifier;
+        uint16_t length;
+        uint8_t unitIdentifier;
+    };
+
+
+    /**
+     * @brief Convert a vector of bytes to a MBAP (Modbus Application Protocol) structure.
+     *
+     * @param bytes The vector containing the bytes to be converted.
+     * @return The converted MBAP structure.
+     */
+    MBAP bytesToMBAP(const std::vector<std::byte> &bytes);
+
+    /**
+     * @brief Converts a Modbus Application Protocol (MBAP) structure to a byte array
+     *
+     * This function converts a given MBAP structure to a byte array representation.
+     *
+     * @param mbap The MBAP structure to be converted
+     * @return An array of bytes representing the MBAP structure
+     *
+     * @see MBAPFromBytes()
+     */
+    std::vector<std::byte> MBAPToBytes(const MBAP &mbap);
+
+
     /**
          * @class PDU
          * @brief Represents a Modbus Protocol Data Unit (PDU).

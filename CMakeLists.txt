@@ -29,8 +29,7 @@ else ()
             src/ModbusUtilities.h
             src/ModbusServer.cpp
             src/ModbusServer.h
-            src/ADU.cpp
-            src/ADU.h)
+    )
     target_include_directories(MBLibrary PUBLIC src ${BOOST_LIBRARIES})
 
     add_executable(runTests tests/pduTests.cpp)

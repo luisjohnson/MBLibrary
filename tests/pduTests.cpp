@@ -443,6 +443,40 @@ TEST_F(ModbusPDUTest, ReadInputRegisterCorrectDataForMaxRegisters) {
 }
 
 
+TEST(ModbusTest, BytesToMBAPReturnsCorrectMBAPForValidBytes) {
+    std::vector<std::byte> bytes = {std::byte(0x01), std::byte(0x02), std::byte(0x03), std::byte(0x04), std::byte(0x05), std::byte(0x06), std::byte(0x07)};
+    Modbus::MBAP expectedMBAP;
+    expectedMBAP.transactionIdentifier = 0x0102;
+    expectedMBAP.protocolIdentifier = 0x0304;
+    expectedMBAP.length = 0x0506;
+    expectedMBAP.unitIdentifier = 0x07;
+
+    Modbus::MBAP actualMBAP = Modbus::bytesToMBAP(bytes);
+
+    EXPECT_EQ(expectedMBAP.transactionIdentifier, actualMBAP.transactionIdentifier);
+    EXPECT_EQ(expectedMBAP.protocolIdentifier, actualMBAP.protocolIdentifier);
+    EXPECT_EQ(expectedMBAP.length, actualMBAP.length);
+    EXPECT_EQ(expectedMBAP.unitIdentifier, actualMBAP.unitIdentifier);
+}
+
+TEST(ModbusTest, BytesToMBAPThrowsExceptionForInvalidBytes) {
+    std::vector<std::byte> bytes = {std::byte(0x01), std::byte(0x02), std::byte(0x03)};
+
+    EXPECT_THROW(Modbus::bytesToMBAP(bytes), std::invalid_argument);
+}
+
+TEST(ModbusTest, MBAPToBytesReturnsCorrectBytesForValidMBAP) {
+    Modbus::MBAP mbap;
+    mbap.transactionIdentifier = 0x0102;
+    mbap.protocolIdentifier = 0x0304;
+    mbap.length = 0x0506;
+    std::vector<std::byte> expectedBytes = {std::byte(0x01), std::byte(0x02), std::byte(0x03), std::byte(0x04), std::byte(0x05), std::byte(0x06)};
+
+    std::vector<std::byte> actualBytes = Modbus::MBAPToBytes(mbap);
+
+    EXPECT_EQ(expectedBytes, actualBytes);
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

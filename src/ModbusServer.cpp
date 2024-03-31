@@ -40,10 +40,15 @@ boost::asio::awaitable<void> Modbus::Server::Server::session(tcp::socket socket)
             std::cout << "Received " << n << " bytes" << std::endl;
             std::vector<std::byte> bytes(n);
             std::copy(data.begin(), data.begin() + n, bytes.begin());
-            Modbus::PDU pdu(bytes, _modbusDataArea);
-            auto response = pdu.buildResponse();
-
-            co_await boost::asio::async_write(socket, boost::asio::buffer(response, n),
+            auto requestMbpa = Modbus::bytesToMBAP(bytes);
+            auto bytesForPDU = std::vector<std::byte>(bytes.begin() + 7, bytes.end());
+            Modbus::PDU pdu(bytesForPDU, _modbusDataArea);
+            auto responsePdu = pdu.buildResponse();
+            auto responseMbpa = Modbus::MBAP{requestMbpa.transactionIdentifier, requestMbpa.protocolIdentifier,
+                                             static_cast<uint16_t>(responsePdu.size() + 1), requestMbpa.unitIdentifier};
+            auto response = Modbus::MBAPToBytes(responseMbpa);
+            response.insert(response.end(), responsePdu.begin(), responsePdu.end());
+            co_await boost::asio::async_write(socket, boost::asio::buffer(data, n),
                                               boost::asio::use_awaitable);
         }
     } catch (std::exception &e) {
