@@ -14,10 +14,7 @@ if (NOT Boost_FOUND)
     message(FATAL_ERROR "Boost not found")
 else ()
     message(STATUS "Boost found")
-    message(STATUS "Boost root: ${BOOST_ROOT}")
-    message(STATUS "Boost include dir: ${BOOST_INCLUDE_DIRS}")
-    message(STATUS "Boost libraries: ${BOOST_LIBRARIES}")
-    include_directories(${Boost_INCLUDE_DIRS})
+#    include_directories(${Boost_INCLUDE_DIRS})
     add_library(MBLibrary STATIC
             src/Modbus.cpp
             src/Modbus.h
@@ -30,10 +27,11 @@ else ()
             src/ModbusServer.cpp
             src/ModbusServer.h
     )
-    target_include_directories(MBLibrary PUBLIC src ${BOOST_LIBRARIES})
+    target_include_directories(MBLibrary PUBLIC src ${Boost_INCLUDE_DIRS})
+    target_link_libraries(MBLibrary ${Boost_LIBRARIES})
 
     add_executable(runTests tests/pduTests.cpp)
-    target_link_libraries(runTests gtest gtest_main MBLibrary)
+    target_link_libraries(runTests gtest gtest_main MBLibrary ${Boost_LIBRARIES})
 
     add_executable(runModbusTests tests/modbusTests.cpp)
     target_link_libraries(runModbusTests gtest gtest_main MBLibrary)
