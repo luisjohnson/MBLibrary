@@ -11,7 +11,7 @@ int main() {
     dataArea.generateInputRegisters(0, 128, Modbus::ValueGenerationType::Random);
     dataArea.generateHoldingRegisters(0, 128, Modbus::ValueGenerationType::Random);
 
-    Modbus::Server::Server server(dataArea);
+    Modbus::Server::MBServer server(dataArea);
     server.start();
 
 

@@ -42,15 +42,15 @@ namespace Modbus::Server {
     boost::asio::awaitable<void> read_data(tcp::socket socket);
 
     /**
-     * @class Server
+     * @class MBServer
      * @brief Represents a server that listens for incoming Modbus requests
      *
-     * The Server class provides methods to start and stop the server,
+     * The MBServer class provides methods to start and stop the server,
      * as well as handling incoming connections and processing Modbus requests.
      */
-    class Server {
+    class MBServer {
     public:
-        explicit Server(Modbus::DataArea &dataArea);
+        explicit MBServer(Modbus::DataArea &dataArea);
 
         /**
          * @fn void start()
@@ -81,12 +81,27 @@ namespace Modbus::Server {
         Modbus::DataArea &_modbusDataArea;
 
         /**
-         * @fn boost::asio::awaitable<void> listener()
-         * @brief Listens for incoming connections and spawns a session for each connection.
+         * @brief Creates a Modbus response for a given Modbus request.
          *
-         * This function is responsible for accepting incoming connections and spawning a session for each connection.
-         * It executes an infinite loop, continuously accepting new connections and handling them in separate sessions.
+         * This function takes a vector of bytes representing a Modbus request and creates a Modbus response.
+         * The function extracts the MBAP (Modbus Application Protocol) header from the request,
+         * builds a PDU (Protocol Data Unit) from the remaining bytes, and constructs the response MBAP header.
+         * Finally, the function combines the response MBAP header with the response PDU and returns the result as a vector of bytes.
+         *
+         * @param bytes The vector containing the Modbus request bytes.
+         * @return A vector of bytes representing the Modbus response.
          */
+        boost::asio::awaitable<std::vector<std::byte>> createResponse(std::vector<std::byte> &bytes);
+
+        /**
+             * @fn boost::asio::awaitable<void> listener()
+             * @brief Listens for incoming connections and spawns sessions for each connection.
+             *
+             * This function is responsible for listening for incoming connections and spawning sessions for each connection.
+             * It is implemented using Boost.Asio's coroutines for asynchronous I/O operations.
+             *
+             * @return A Boost.Asio awaitable object that represents the asynchronous listener operation.
+             */
         boost::asio::awaitable<void> listener();
 
         /**
