@@ -5,7 +5,6 @@
 #include <memory>
 
 
-
 class ModbusPDUTest : public ::testing::Test {
 protected:
     std::vector<Modbus::Coil> coils;
@@ -444,7 +443,8 @@ TEST_F(ModbusPDUTest, ReadInputRegisterCorrectDataForMaxRegisters) {
 
 
 TEST(ModbusTest, BytesToMBAPReturnsCorrectMBAPForValidBytes) {
-    std::vector<std::byte> bytes = {std::byte(0x01), std::byte(0x02), std::byte(0x03), std::byte(0x04), std::byte(0x05), std::byte(0x06), std::byte(0x07)};
+    std::vector<std::byte> bytes = {std::byte(0x01), std::byte(0x02), std::byte(0x03), std::byte(0x04), std::byte(0x05),
+                                    std::byte(0x06), std::byte(0x07)};
     Modbus::MBAP expectedMBAP;
     expectedMBAP.transactionIdentifier = 0x0102;
     expectedMBAP.protocolIdentifier = 0x0304;
@@ -466,11 +466,13 @@ TEST(ModbusTest, BytesToMBAPThrowsExceptionForInvalidBytes) {
 }
 
 TEST(ModbusTest, MBAPToBytesReturnsCorrectBytesForValidMBAP) {
-    Modbus::MBAP mbap;
+    Modbus::MBAP mbap{};
     mbap.transactionIdentifier = 0x0102;
     mbap.protocolIdentifier = 0x0304;
     mbap.length = 0x0506;
-    std::vector<std::byte> expectedBytes = {std::byte(0x01), std::byte(0x02), std::byte(0x03), std::byte(0x04), std::byte(0x05), std::byte(0x06)};
+    mbap.unitIdentifier = 0x01;
+    std::vector<std::byte> expectedBytes = {std::byte(0x01), std::byte(0x02), std::byte(0x03), std::byte(0x04),
+                                            std::byte(0x05), std::byte(0x06), std::byte(0x01)};
 
     std::vector<std::byte> actualBytes = Modbus::MBAPToBytes(mbap);
 

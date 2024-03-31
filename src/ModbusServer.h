@@ -14,6 +14,7 @@ using boost::asio::ip::tcp;
 
 namespace Modbus::Server {
 
+    const int MBAP_HEADER_LENGTH = 7; // Size of the Modbus Application Protocol header
     /**
      * @brief Starts a listener using Boost.Asio.
      *

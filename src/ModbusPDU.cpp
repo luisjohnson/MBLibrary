@@ -22,6 +22,7 @@ std::vector<std::byte> Modbus::MBAPToBytes(const MBAP &mbap) {
     bytes.push_back((std::byte) (mbap.protocolIdentifier & 0xFF));
     bytes.push_back((std::byte) (mbap.length >> 8));
     bytes.push_back((std::byte) (mbap.length & 0xFF));
+    bytes.push_back((std::byte) mbap.unitIdentifier);
     return bytes;
 }
 

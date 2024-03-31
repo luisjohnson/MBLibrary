@@ -14,7 +14,6 @@ if (NOT Boost_FOUND)
     message(FATAL_ERROR "Boost not found")
 else ()
     message(STATUS "Boost found")
-#    include_directories(${Boost_INCLUDE_DIRS})
     add_library(MBLibrary STATIC
             src/Modbus.cpp
             src/Modbus.h
