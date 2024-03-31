@@ -133,8 +133,8 @@ std::vector<std::byte> Modbus::PDU::getReadInputRegistersResponse() {
 }
 
 std::vector<std::byte> Modbus::PDU::getWriteSingleCoilResponse() {
-    int address = Modbus::Utilities::twoBytesToUint16(_data[1], _data[2]);
-    int value = Modbus::Utilities::twoBytesToUint16(_data[3], _data[4]);
+    int address = Modbus::Utilities::twoBytesToUint16(_data[0], _data[1]);
+    int value = Modbus::Utilities::twoBytesToUint16(_data[2], _data[3]);
     bool coilValue = (value == 0xFF00);
 
     if (value != 0xFF00 && value != 0x0000) {
@@ -144,9 +144,10 @@ std::vector<std::byte> Modbus::PDU::getWriteSingleCoilResponse() {
     try {
         auto coil = _modbusDataArea.getCoils(address, 1).front();
         coil.write(coilValue);
-        return {_data[0], _data[1], _data[2], _data[3], _data[4]};
+        return {static_cast<std::byte>(Modbus::FunctionCode::WriteSingleCoil), _data[0], _data[1], _data[2], _data[3]};
     } catch (std::out_of_range &e) {
-        return Modbus::buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalDataAddress);
+        return Modbus::buildExceptionResponse(_functionCode,
+                                              Modbus::ExceptionCode::IllegalDataAddress);
     }
 }
 
@@ -202,7 +203,8 @@ std::vector<std::byte> Modbus::PDU::getWriteMultipleRegistersResponse() {
     }
 }
 
-std::vector<std::byte>Modbus::buildExceptionResponse(Modbus::FunctionCode functionCode, Modbus::ExceptionCode exceptionCode) {
+std::vector<std::byte>
+Modbus::buildExceptionResponse(Modbus::FunctionCode functionCode, Modbus::ExceptionCode exceptionCode) {
     return {static_cast<std::byte>(0x80 + static_cast<uint8_t>(functionCode)),
             static_cast<std::byte>(exceptionCode)};
 }

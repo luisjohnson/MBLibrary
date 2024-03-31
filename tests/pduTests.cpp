@@ -441,6 +441,34 @@ TEST_F(ModbusPDUTest, ReadInputRegisterCorrectDataForMaxRegisters) {
     ASSERT_EQ(response[1], std::byte{0xFA});
 }
 
+TEST_F(ModbusPDUTest, WriteSingleCoilsCorrectResponse) {
+
+    int address = 1;
+
+    auto coil = modbusDataArea.getCoils(address, 1).front();
+    coil.write(false);
+    ASSERT_FALSE(coil.read());
+    auto valueMsb = std::byte{0xFF};
+    auto valueLsb = std::byte{0x00};
+
+    auto addressMsb = static_cast<std::byte>(address >> 8);
+    auto addressLsb = static_cast<std::byte>(address & 0xFF);
+
+    Modbus::PDU pdu({std::byte{0x05}, addressMsb, addressLsb, valueMsb, valueLsb},
+                    modbusDataArea);
+
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_TRUE(coil.read());
+    ASSERT_EQ(response.size(), 5);
+    ASSERT_EQ(response[0], std::byte{0x05});
+    ASSERT_EQ(response[1], std::byte{0x00});
+    ASSERT_EQ(response[2], std::byte{0x01});
+    ASSERT_EQ(response[3], std::byte{0xFF});
+    ASSERT_EQ(response[4], std::byte{0x00});
+
+}
 
 TEST(ModbusTest, BytesToMBAPReturnsCorrectMBAPForValidBytes) {
     std::vector<std::byte> bytes = {std::byte(0x01), std::byte(0x02), std::byte(0x03), std::byte(0x04), std::byte(0x05),
