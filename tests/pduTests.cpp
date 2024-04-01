@@ -535,6 +535,70 @@ TEST_F(ModbusPDUTest, WriteSingleRegisterCorrectResponse) {
     ASSERT_EQ(response[4], valueLsb);
 }
 
+TEST_F(ModbusPDUTest, WriteMultipleCoilsInvalidAddressResponse) {
+
+    Modbus::PDU pdu({std::byte{0x0F}, std::byte{0x00}, std::byte{0x0B}, std::byte{0xFF},
+                     std::byte{0x00}, std::byte{0x01}, std::byte{0x01}}, modbusDataArea);
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte{0x8F});
+    ASSERT_EQ(response[1], std::byte{0x02});
+}
+
+TEST_F(ModbusPDUTest, WriteMultipleCoilsResponseInvalidQuantity) {
+    Modbus::DataArea dataArea;
+    Modbus::PDU pdu({std::byte(0x0F), std::byte(0x00), std::byte(0x01), std::byte(0x07), std::byte(0xD1),
+                     std::byte(0x03), std::byte(0xAC), std::byte(0xDB), std::byte(0x35)}, dataArea);
+
+    auto response = pdu.buildResponse();
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte(0x8F));
+    ASSERT_EQ(response[1], std::byte(0x03));
+}
+
+TEST_F(ModbusPDUTest, WriteMultipleCoilsResponseInvalidByteCount) {
+    Modbus::DataArea dataArea;
+    Modbus::PDU pdu({std::byte(0x0F), std::byte(0x00), std::byte(0x01), std::byte(0x07), std::byte(0xD0),
+                     std::byte(0x03), std::byte(0xAC), std::byte(0xDB), std::byte(0x35)}, dataArea);
+
+    auto response = pdu.buildResponse();
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte(0x8F));
+    ASSERT_EQ(response[1], std::byte(0x03));
+}
+
+TEST_F(ModbusPDUTest, WriteMultipleCoilsCorrectResponse) {
+    Modbus::DataArea dataArea;
+    for (int i = 1; i < 2001; i++) {
+        dataArea.insertCoil(Modbus::Coil(i, false));
+    }
+
+    std::vector<std::byte> rawData = {static_cast<std::byte>(Modbus::FunctionCode::WriteMultipleCoils),
+                                      std::byte(0x00), std::byte(0x01), std::byte(0x07),
+                                      std::byte(0xD0), std::byte(0xFA)};
+
+    for (int i = 0; i < 250; i++) {
+        rawData.push_back(std::byte(0xFF));
+    }
+
+    Modbus::PDU pdu(rawData, dataArea);
+
+    auto response = pdu.buildResponse();
+
+   for (auto coil : dataArea.getAllCoils()) {
+        ASSERT_TRUE(coil.read());
+    }
+
+    ASSERT_EQ(response.size(), 5);
+    ASSERT_EQ(response[0], std::byte(0x0F));
+    ASSERT_EQ(response[1], std::byte(0x00));
+    ASSERT_EQ(response[2], std::byte(0x01));
+    ASSERT_EQ(response[3], std::byte(0x07));
+    ASSERT_EQ(response[4], std::byte(0xD0));
+}
+
 TEST(ModbusTest, BytesToMBAPReturnsCorrectMBAPForValidBytes) {
     std::vector<std::byte> bytes = {std::byte(0x01), std::byte(0x02), std::byte(0x03), std::byte(0x04),
                                     std::byte(0x05), std::byte(0x06), std::byte(0x07)};

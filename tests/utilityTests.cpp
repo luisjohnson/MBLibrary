@@ -163,6 +163,37 @@ TEST_F(UtilityTest, GenerateRandomIntegerReturnsValueWithinFullRange) {
     ASSERT_LE(result, INT_MAX);
 }
 
+TEST(ModbusUtilitiesTest, BytesToBooleans_ConvertsSingleByteCorrectly) {
+    std::vector<std::byte> bytes = {std::byte(0b10101010)};
+    auto booleans = Modbus::Utilities::bytesToBooleans(bytes);
+    ASSERT_EQ(booleans, std::vector<bool>({false, true, false, true, false, true, false, true}));
+}
+
+TEST(ModbusUtilitiesTest, BytesToBooleans_ConvertsMultipleBytesCorrectly) {
+    std::vector<std::byte> bytes = {std::byte(0b10101010), std::byte(0b01010101)};
+    auto booleans = Modbus::Utilities::bytesToBooleans(bytes);
+    ASSERT_EQ(booleans, std::vector<bool>({false, true, false, true, false, true, false, true, true, false, true,
+                                           false, true, false, true, false}));
+}
+
+TEST(ModbusUtilitiesTest, BytesToBooleans_ReturnsEmptyForEmptyInput) {
+    std::vector<std::byte> bytes;
+    auto booleans = Modbus::Utilities::bytesToBooleans(bytes);
+    ASSERT_TRUE(booleans.empty());
+}
+
+TEST(ModbusUtilitiesTest, BytesToBooleans_HandlesAllZeroByteCorrectly) {
+    std::vector<std::byte> bytes = {std::byte(0b00000000)};
+    auto booleans = Modbus::Utilities::bytesToBooleans(bytes);
+    ASSERT_EQ(booleans, std::vector<bool>({false, false, false, false, false, false, false, false}));
+}
+
+TEST(ModbusUtilitiesTest, BytesToBooleans_HandlesAllOneByteCorrectly) {
+    std::vector<std::byte> bytes = {std::byte(0b11111111)};
+    auto booleans = Modbus::Utilities::bytesToBooleans(bytes);
+    ASSERT_EQ(booleans, std::vector<bool>({true, true, true, true, true, true, true, true}));
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

@@ -164,28 +164,37 @@ std::vector<std::byte> Modbus::PDU::getWriteSingleRegisterResponse() {
 
 std::vector<std::byte> Modbus::PDU::getWriteMultipleCoilsResponse() {
     auto [startingAddress, quantityOfCoils] = getStartingAddressAndQuantityOfRegisters();
-    auto byteCount = static_cast<int>(_data[6]);
+    auto byteCount = static_cast<int>(_data[4]);
 
+    if ((quantityOfCoils < 0) || (quantityOfCoils > 2000) || (byteCount != calculateBytesFromBits(quantityOfCoils))) {
+        return Modbus::buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalDataValue);
+    }
+
+    // Check if range is valid
+    try {
+        auto coils = _modbusDataArea.getCoils(startingAddress, quantityOfCoils);
+    }
+    catch (std::out_of_range &e) {
+        return Modbus::buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalDataAddress);
+    }
+
+    // Request is valid, unpack the booleans
     std::vector<bool> unpackedBooleans{};
-
+    // TODO: Implement a more efficient way to unpack the booleans
     for (int i = 0; i < byteCount; ++i) {
-        auto byte = static_cast<uint8_t>(_data[7 + i]);
+        auto byte = static_cast<uint8_t>(_data[5 + i]);
         for (int j = 0; j < 8; ++j) {
             unpackedBooleans.push_back((byte & (1 << j)) != 0);
         }
     }
 
-    try {
-        auto coils = _modbusDataArea.getCoils(startingAddress, quantityOfCoils);
-        for (int i = 0; i < quantityOfCoils; ++i) {
-            coils[i].write(unpackedBooleans[i]);
-        }
+    //TODO: Implement Exception code 4 for Modbus::ExceptionCode::ServerDeviceFailure
 
-        return {_data[0], _data[1], _data[2], _data[3], _data[4]};
-
-    } catch (std::out_of_range &e) {
-        return Modbus::buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalDataAddress);
+    for (int i = 0; i < quantityOfCoils; ++i) {
+        _modbusDataArea.writeSingletCoil(startingAddress + i, unpackedBooleans[i]);
     }
+    return {static_cast<std::byte>(Modbus::FunctionCode::WriteMultipleCoils), _data[0], _data[1], _data[2],
+            _data[3]};
 }
 
 std::vector<std::byte> Modbus::PDU::getWriteMultipleRegistersResponse() {

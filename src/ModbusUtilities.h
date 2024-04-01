@@ -73,6 +73,28 @@ namespace Modbus::Utilities {
     int generateRandomInteger(int min = INT_MIN, int max = INT_MAX);
 
     /**
+     * @brief Converts a vector of bytes to a vector of booleans.
+     *
+     * This function takes a vector of bytes and converts each byte into a vector of booleans.
+     * Each byte is decomposed into its individual bits, and each bit is then stored as a boolean value in the resulting vector.
+     *
+     * @param bytes The vector of bytes to convert.
+     * @return A vector of booleans representing the bits of the input bytes.
+     *
+     * @note The input vector of bytes must be non-empty.
+     * @note The size of the resulting vector of booleans will be equal to the size of the input vector of bytes multiplied by 8.
+     * @note The resulting vector of booleans will have the bits from the input bytes stored in the same order.
+     *       The bits from the first byte are stored first, followed by the bits from the second byte, and so on.
+     * @Par Example
+     * @code
+     * std::vector<std::byte> bytes = {std::byte(0b10101010)};
+     * auto booleans = Modbus::Utilities::bytesToBooleans(bytes);
+     * // booleans = {false, true, false, true, false, true, false, true}
+     * @endcode
+     */
+    std::vector<bool> bytesToBooleans(const std::vector<std::byte> &bytes);
+
+    /**
      * @brief Packs a vector of boolean registers into a vector of bytes.
      *
      * This function takes a vector of boolean registers (either objects of type Coil or DiscreteInput) and packs their

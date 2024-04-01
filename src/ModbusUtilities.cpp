@@ -18,4 +18,14 @@ namespace Modbus::Utilities {
     uint16_t twoBytesToUint16(std::byte msb, std::byte lsb) {
         return (static_cast<uint16_t>(msb) << 8) | static_cast<uint16_t>(lsb);
     }
+
+    std::vector<bool> bytesToBooleans(const std::vector<std::byte> &bytes) {
+    std::vector<bool> booleans(bytes.size() * 8);
+    for (size_t i = 0; i < bytes.size(); ++i) {
+        for (int j = 0; j < 8; ++j) {
+            booleans[i * 8 + j] = (bytes[i] & static_cast<std::byte>(1 << j)) != std::byte(0);
+        }
+    }
+    return booleans;
+}
 }
