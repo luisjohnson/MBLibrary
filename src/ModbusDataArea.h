@@ -162,7 +162,21 @@ namespace Modbus {
         void generateInputRegisters(int startAddress, int count, ValueGenerationType type = ValueGenerationType::Zeros);
 
 
+        /**
+         * @brief Writes a single coil value to the Modbus data area.
+         *
+         * This function is used to write a boolean value to a specific address in the Modbus data
+         * area. The address must be a valid coil address within the data area.
+         *
+         * @param address The address of the coil to be written.
+         * @param value The boolean value to write to the coil.
+         *
+         * @throw std::out_of_range if the specified address is not a valid coil address.
+         *
+         */
         void writeSingletCoil(int address, bool value);
+
+        void writeSingleRegister(int address, int value);
 
         /**
          * @defgroup Coils Coils

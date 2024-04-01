@@ -133,17 +133,18 @@ std::vector<std::byte> Modbus::PDU::getReadInputRegistersResponse() {
 }
 
 std::vector<std::byte> Modbus::PDU::getWriteSingleCoilResponse() {
-    int address = Modbus::Utilities::twoBytesToUint16(_data[0], _data[1]);
-    int value = Modbus::Utilities::twoBytesToUint16(_data[2], _data[3]);
-    bool coilValue = (value == 0xFF00);
-
+    auto [address, value] = getStartingAddressAndQuantityOfRegisters();
+    bool coilValue = false;
     if (value != 0xFF00 && value != 0x0000) {
         return Modbus::buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalDataValue);
+    } else {
+        coilValue = (value == 0xFF00);
     }
 
     try {
         _modbusDataArea.writeSingletCoil(address, coilValue);
-        return {static_cast<std::byte>(Modbus::FunctionCode::WriteSingleCoil), _data[0], _data[1], _data[2], _data[3]};
+        return {static_cast<std::byte>(Modbus::FunctionCode::WriteSingleCoil), _data[0], _data[1],
+                _data[2], _data[3]};
     } catch (std::out_of_range &e) {
         return Modbus::buildExceptionResponse(_functionCode,
                                               Modbus::ExceptionCode::IllegalDataAddress);
@@ -153,9 +154,9 @@ std::vector<std::byte> Modbus::PDU::getWriteSingleCoilResponse() {
 std::vector<std::byte> Modbus::PDU::getWriteSingleRegisterResponse() {
     auto [address, value] = getStartingAddressAndQuantityOfRegisters();
     try {
-        auto holdingRegister = _modbusDataArea.getHoldingRegisters(address, 1).front();
-        holdingRegister.write(value);
-        return {_data[0], _data[1], _data[2], _data[3], _data[4]};
+        _modbusDataArea.writeSingleRegister(address, value);
+        return {static_cast<std::byte>(Modbus::FunctionCode::WriteSingleRegister), _data[0], _data[1], _data[2],
+                _data[3]};
     } catch (std::out_of_range &e) {
         return Modbus::buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalDataAddress);
     }

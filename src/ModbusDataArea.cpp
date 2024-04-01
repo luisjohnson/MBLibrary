@@ -85,3 +85,11 @@ void Modbus::DataArea::writeSingletCoil(int address, bool value) {
     coil->write(value);
 }
 
+void Modbus::DataArea::writeSingleRegister(int address, int value) {
+    auto holdingRegister = getRegister(_holdingRegisters, address);
+    if (!holdingRegister)
+        throw std::out_of_range("Invalid holding register address.");
+    holdingRegister->write(value);
+}
+
+

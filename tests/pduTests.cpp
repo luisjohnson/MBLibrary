@@ -441,6 +441,30 @@ TEST_F(ModbusPDUTest, ReadInputRegisterCorrectDataForMaxRegisters) {
     ASSERT_EQ(response[1], std::byte{0xFA});
 }
 
+TEST_F(ModbusPDUTest, WriteSingleCoilInvalidAddressResponse) {
+
+    Modbus::PDU pdu({std::byte{0x05}, std::byte{0x00}, std::byte{0x0B}, std::byte{0xFF}, std::byte{0x00}},
+                    modbusDataArea);
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte{0x85});
+    ASSERT_EQ(response[1], std::byte{0x02});
+}
+
+TEST_F(ModbusPDUTest, WriteSingleCoilInvalidValueResponse) {
+
+    Modbus::PDU pdu({std::byte{0x05}, std::byte{0x00}, std::byte{0x01}, std::byte{0xAB}, std::byte{0xCD}},
+                    modbusDataArea);
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte{0x85});
+    ASSERT_EQ(response[1], std::byte{0x03});
+}
+
 TEST_F(ModbusPDUTest, WriteSingleCoilsCorrectResponse) {
 
     auto lastCoil = modbusDataArea.getAllCoils().back();
@@ -471,9 +495,49 @@ TEST_F(ModbusPDUTest, WriteSingleCoilsCorrectResponse) {
 
 }
 
+TEST_F(ModbusPDUTest, WriteSingleRegisterInvalidAddressResponse) {
+
+    Modbus::PDU pdu({std::byte{0x06}, std::byte{0x00}, std::byte{0x0B}, std::byte{0xFF},
+                     std::byte{0x00}}, modbusDataArea);
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte{0x86});
+    ASSERT_EQ(response[1], std::byte{0x02});
+}
+
+TEST_F(ModbusPDUTest, WriteSingleRegisterCorrectResponse) {
+
+    auto lastRegister = modbusDataArea.getAllHoldingRegisters().back();
+
+    int address = lastRegister.getAddress() + 1;
+    modbusDataArea.insertHoldingRegister(Modbus::HoldingRegister(address, 0x0000));
+    auto valueMsb = std::byte{0xAB};
+    auto valueLsb = std::byte{0xCD};
+
+    auto addressMsb = static_cast<std::byte>(address >> 8);
+    auto addressLsb = static_cast<std::byte>(address & 0xFF);
+
+    Modbus::PDU pdu({std::byte{0x06}, addressMsb, addressLsb, valueMsb, valueLsb},
+                    modbusDataArea);
+
+    auto response = pdu.buildResponse();
+
+    auto reg = modbusDataArea.getHoldingRegisters(address, 1).front();
+
+    ASSERT_EQ(reg.read(), 0xABCD);
+    ASSERT_EQ(response.size(), 5);
+    ASSERT_EQ(response[0], std::byte{0x06});
+    ASSERT_EQ(response[1], addressMsb);
+    ASSERT_EQ(response[2], addressLsb);
+    ASSERT_EQ(response[3], valueMsb);
+    ASSERT_EQ(response[4], valueLsb);
+}
+
 TEST(ModbusTest, BytesToMBAPReturnsCorrectMBAPForValidBytes) {
-    std::vector<std::byte> bytes = {std::byte(0x01), std::byte(0x02), std::byte(0x03), std::byte(0x04), std::byte(0x05),
-                                    std::byte(0x06), std::byte(0x07)};
+    std::vector<std::byte> bytes = {std::byte(0x01), std::byte(0x02), std::byte(0x03), std::byte(0x04),
+                                    std::byte(0x05), std::byte(0x06), std::byte(0x07)};
     Modbus::MBAP expectedMBAP;
     expectedMBAP.transactionIdentifier = 0x0102;
     expectedMBAP.protocolIdentifier = 0x0304;
@@ -500,8 +564,9 @@ TEST(ModbusTest, MBAPToBytesReturnsCorrectBytesForValidMBAP) {
     mbap.protocolIdentifier = 0x0304;
     mbap.length = 0x0506;
     mbap.unitIdentifier = 0x01;
-    std::vector<std::byte> expectedBytes = {std::byte(0x01), std::byte(0x02), std::byte(0x03), std::byte(0x04),
-                                            std::byte(0x05), std::byte(0x06), std::byte(0x01)};
+    std::vector<std::byte> expectedBytes = {std::byte(0x01), std::byte(0x02), std::byte(0x03),
+                                            std::byte(0x04), std::byte(0x05), std::byte(0x06),
+                                            std::byte(0x01)};
 
     std::vector<std::byte> actualBytes = Modbus::MBAPToBytes(mbap);
 
