@@ -142,8 +142,7 @@ std::vector<std::byte> Modbus::PDU::getWriteSingleCoilResponse() {
     }
 
     try {
-        auto coil = _modbusDataArea.getCoils(address, 1).front();
-        coil.write(coilValue);
+        _modbusDataArea.writeSingletCoil(address, coilValue);
         return {static_cast<std::byte>(Modbus::FunctionCode::WriteSingleCoil), _data[0], _data[1], _data[2], _data[3]};
     } catch (std::out_of_range &e) {
         return Modbus::buildExceptionResponse(_functionCode,

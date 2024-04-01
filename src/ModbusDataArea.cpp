@@ -77,3 +77,11 @@ void Modbus::DataArea::generateHoldingRegisters(int startAddress, int count, Mod
 void Modbus::DataArea::generateInputRegisters(int startAddress, int count, Modbus::ValueGenerationType type) {
     generateIntegerRegisters(_inputRegisters, startAddress, count, type);
 }
+
+void Modbus::DataArea::writeSingletCoil(int address, bool value) {
+    auto coil = getRegister(_coils, address);
+    if (!coil)
+        throw std::out_of_range("Invalid coil address.");
+    coil->write(value);
+}
+

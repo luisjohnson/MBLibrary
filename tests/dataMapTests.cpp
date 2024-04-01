@@ -175,6 +175,7 @@ TEST(ModbusDataAreaTest, SortInputRegisters) {
     ASSERT_EQ(retrievedRegisters[1].getAddress(), 11);
 }
 
+
 TEST(ModbusDataAreaTest, InsertCoilThrowsExceptionWhenMaxCoilsExceeded) {
     Modbus::DataArea dataArea;
     for (int i = 1; i < Modbus::MAX_COILS + 1; i++) {
@@ -188,7 +189,8 @@ TEST(ModbusDataAreaTest, InsertInputRegisterThorwsExceptionWhenMaxInputRegisters
     for (int i = 1; i < Modbus::MAX_INPUT_REGISTERS + 1; i++) {
         ASSERT_NO_THROW(dataArea.insertInputRegister(Modbus::InputRegister(i, 1000)));
     }
-    ASSERT_THROW(dataArea.insertInputRegister(Modbus::InputRegister(2001, 1000)), std::range_error);
+    ASSERT_THROW(dataArea.insertInputRegister(Modbus::InputRegister(2001, 1000)),
+                 std::range_error);
 }
 
 TEST(ModbusDataAreaTest, RegisterExists) {
@@ -196,13 +198,25 @@ TEST(ModbusDataAreaTest, RegisterExists) {
     for (int i = 0; i < 10 + 1; i++) {
         ASSERT_NO_THROW(dataArea.insertHoldingRegister(Modbus::HoldingRegister(i, 1000)));
     }
-    ASSERT_THROW(dataArea.insertHoldingRegister(Modbus::HoldingRegister(1, 1000)), std::invalid_argument);
+    ASSERT_THROW(dataArea.insertHoldingRegister(Modbus::HoldingRegister(1, 1000)),
+                 std::invalid_argument);
+}
+
+TEST_F(ModbusDataAreaTestWithFixture, writeSingleCoilReturnsNullptrWhenRegisterDoesNotExist) {
+    ASSERT_THROW(modbusDataArea->writeSingletCoil(1000, true), std::out_of_range);
+}
+
+TEST_F(ModbusDataAreaTestWithFixture, writeSingleCoil) {
+    modbusDataArea->insertCoil(Modbus::Coil(100, false));
+    modbusDataArea->writeSingletCoil(100, true);
+    auto coil = modbusDataArea->getCoils(100, 1).front();
+    ASSERT_TRUE(coil.read());
 }
 
 TEST_F(ModbusDataAreaTestWithFixture, generateCoilsWithZeros) {
     modbusDataArea->generateCoils(0, 10, Modbus::ValueGenerationType::Zeros);
     auto coils = modbusDataArea->getCoils(0, 10);
-    for (Modbus::Coil coil : coils) {
+    for (Modbus::Coil coil: coils) {
         EXPECT_EQ(coil.read(), false);
     }
 }
@@ -210,7 +224,7 @@ TEST_F(ModbusDataAreaTestWithFixture, generateCoilsWithZeros) {
 TEST_F(ModbusDataAreaTestWithFixture, generateDiscreteInputsWithOnes) {
     modbusDataArea->generateDiscreteInputs(0, 10, Modbus::ValueGenerationType::Ones);
     auto inputs = modbusDataArea->getDiscreteInputs(0, 10);
-    for (Modbus::DiscreteInput input : inputs) {
+    for (Modbus::DiscreteInput input: inputs) {
         EXPECT_EQ(input.read(), true);
     }
 }
@@ -234,19 +248,25 @@ TEST_F(ModbusDataAreaTestWithFixture, generateInputRegistersWithIncrementalValue
 }
 
 TEST_F(ModbusDataAreaTestWithFixture, generateCoilsWithInvalidCount) {
-    EXPECT_THROW(modbusDataArea->generateCoils(0, 2001, Modbus::ValueGenerationType::Zeros), std::out_of_range);
+    EXPECT_THROW(modbusDataArea->generateCoils(0, 2001, Modbus::ValueGenerationType::Zeros),
+                 std::out_of_range);
 }
 
 TEST_F(ModbusDataAreaTestWithFixture, generateDiscreteInputsWithInvalidCount) {
-    EXPECT_THROW(modbusDataArea->generateDiscreteInputs(0, 2001, Modbus::ValueGenerationType::Zeros), std::out_of_range);
+    EXPECT_THROW(modbusDataArea->generateDiscreteInputs(0, 2001,
+                                                        Modbus::ValueGenerationType::Zeros),
+                 std::out_of_range);
 }
 
 TEST_F(ModbusDataAreaTestWithFixture, generateHoldingRegistersWithInvalidCount) {
-    EXPECT_THROW(modbusDataArea->generateHoldingRegisters(0, 126, Modbus::ValueGenerationType::Zeros), std::out_of_range);
+    EXPECT_THROW(modbusDataArea->generateHoldingRegisters(0, 126,
+                                                          Modbus::ValueGenerationType::Zeros),
+                 std::out_of_range);
 }
 
 TEST_F(ModbusDataAreaTestWithFixture, generateInputRegistersWithInvalidCount) {
-    EXPECT_THROW(modbusDataArea->generateInputRegisters(0, 126, Modbus::ValueGenerationType::Zeros), std::out_of_range);
+    EXPECT_THROW(modbusDataArea->generateInputRegisters(0, 126,
+                                                        Modbus::ValueGenerationType::Zeros), std::out_of_range);
 }
 
 int main(int argc, char **argv) {

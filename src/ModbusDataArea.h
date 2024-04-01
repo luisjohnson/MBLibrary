@@ -161,6 +161,9 @@ namespace Modbus {
          */
         void generateInputRegisters(int startAddress, int count, ValueGenerationType type = ValueGenerationType::Zeros);
 
+
+        void writeSingletCoil(int address, bool value);
+
         /**
          * @defgroup Coils Coils
          * @brief Functions related to retrieving all coils
@@ -348,6 +351,20 @@ namespace Modbus {
                 throw std::out_of_range("Requested range does not exist");
 
             return {startIt, endIt};
+        }
+
+        template<typename T>
+        T* getRegister(std::vector<T> &registers, int address) {
+            static_assert(std::is_same<T, Coil>::value || std::is_same<T, DiscreteInput>::value ||
+                          std::is_same<T, HoldingRegister>::value || std::is_same<T, InputRegister>::value,
+                          "Invalid register type.");
+            std::lock_guard<std::mutex> lock(_mutex);
+            auto it = std::find_if(registers.begin(), registers.end(), [address](const T &reg) {
+                return reg.getAddress() == address;
+            });
+            if (it == registers.end())
+                return nullptr;
+            return &(*it);
         }
 
 

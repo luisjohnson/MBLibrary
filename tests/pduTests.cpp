@@ -443,11 +443,8 @@ TEST_F(ModbusPDUTest, ReadInputRegisterCorrectDataForMaxRegisters) {
 
 TEST_F(ModbusPDUTest, WriteSingleCoilsCorrectResponse) {
 
-    int address = 1;
-
-    auto coil = modbusDataArea.getCoils(address, 1).front();
-    coil.write(false);
-    ASSERT_FALSE(coil.read());
+    int address = 100;
+    modbusDataArea.insertCoil(Modbus::Coil(address, false));
     auto valueMsb = std::byte{0xFF};
     auto valueLsb = std::byte{0x00};
 
@@ -459,6 +456,8 @@ TEST_F(ModbusPDUTest, WriteSingleCoilsCorrectResponse) {
 
 
     auto response = pdu.buildResponse();
+
+    auto coil = modbusDataArea.getCoils(address, address).front();
 
     ASSERT_TRUE(coil.read());
     ASSERT_EQ(response.size(), 5);
