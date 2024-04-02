@@ -164,9 +164,12 @@ std::vector<std::byte> Modbus::PDU::getWriteSingleRegisterResponse() {
 
 std::vector<std::byte> Modbus::PDU::getWriteMultipleCoilsResponse() {
     auto [startingAddress, quantityOfCoils] = getStartingAddressAndQuantityOfRegisters();
-    auto byteCount = static_cast<int>(_data[4]);
+    auto byteCountFromRawData = static_cast<int>(_data[4]);
+    auto requiredBytesForNumberOfCoils = calculateBytesFromBits(quantityOfCoils);
 
-    if ((quantityOfCoils < 0) || (quantityOfCoils > 2000) || (byteCount != calculateBytesFromBits(quantityOfCoils))) {
+
+    if ((quantityOfCoils < 0) || (quantityOfCoils > MAX_COILS) ||
+        (byteCountFromRawData != requiredBytesForNumberOfCoils) || (requiredBytesForNumberOfCoils > _data.size() - 5)) {
         return Modbus::buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalDataValue);
     }
 
@@ -181,7 +184,7 @@ std::vector<std::byte> Modbus::PDU::getWriteMultipleCoilsResponse() {
     // Request is valid, unpack the booleans
     std::vector<bool> unpackedBooleans{};
     // TODO: Implement a more efficient way to unpack the booleans
-    for (int i = 0; i < byteCount; ++i) {
+    for (int i = 0; i < byteCountFromRawData; ++i) {
         auto byte = static_cast<uint8_t>(_data[5 + i]);
         for (int j = 0; j < 8; ++j) {
             unpackedBooleans.push_back((byte & (1 << j)) != 0);
@@ -189,27 +192,37 @@ std::vector<std::byte> Modbus::PDU::getWriteMultipleCoilsResponse() {
     }
 
     //TODO: Implement Exception code 4 for Modbus::ExceptionCode::ServerDeviceFailure
-
     for (int i = 0; i < quantityOfCoils; ++i) {
         _modbusDataArea.writeSingletCoil(startingAddress + i, unpackedBooleans[i]);
     }
-    return {static_cast<std::byte>(Modbus::FunctionCode::WriteMultipleCoils), _data[0], _data[1], _data[2],
+    return {static_cast<std::byte>(_functionCode), _data[0], _data[1], _data[2],
             _data[3]};
 }
 
 std::vector<std::byte> Modbus::PDU::getWriteMultipleRegistersResponse() {
     auto [startingAddress, quantityOfRegisters] = getStartingAddressAndQuantityOfRegisters();
-    auto byteCount = static_cast<int>(_data[6]);
+    auto byteCount = static_cast<int>(_data[4]);
+
+    if ((quantityOfRegisters < 0) || (quantityOfRegisters > MAX_HOLDING_REGISTERS) ||
+        (byteCount != quantityOfRegisters * 2) || (quantityOfRegisters * 2 > _data.size() - 5)) {
+        return Modbus::buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalDataValue);
+    }
+
+    // Check if range is valid
     try {
         auto holdingRegisters = _modbusDataArea.getHoldingRegisters(startingAddress, quantityOfRegisters);
-        for (int i = 0; i < quantityOfRegisters; ++i) {
-            auto value = Modbus::Utilities::twoBytesToUint16(_data[7 + i * 2], _data[8 + i * 2]);
-            holdingRegisters[i].write(value);
-        }
-        return {_data[0], _data[1], _data[2], _data[3], _data[4]};
     } catch (std::out_of_range &e) {
         return Modbus::buildExceptionResponse(_functionCode, Modbus::ExceptionCode::IllegalDataAddress);
     }
+
+    // Process the request
+    //TODO: Implement Exception code 4 for Modbus::ExceptionCode::ServerDeviceFailure
+    for (int i = 0; i < quantityOfRegisters; ++i) {
+        auto value = Modbus::Utilities::twoBytesToUint16(_data[5 + i * 2], _data[6 + i * 2]);
+        _modbusDataArea.writeSingleRegister(startingAddress + i, value);
+    }
+    return {static_cast<std::byte>(_functionCode), _data[0], _data[1], _data[2],
+            _data[3]};
 }
 
 std::vector<std::byte>

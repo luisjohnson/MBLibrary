@@ -14,7 +14,8 @@ protected:
 
     std::vector<Modbus::InputRegister> emptyInputRegisters{};
     std::vector<Modbus::HoldingRegister> emptyHoldingRegisters{};
-    Modbus::DataArea modbusDataArea{};
+    Modbus::DataArea modbusDataAreaWithTenRegistersEach{}; // 10 coils, 10 discrete inputs, 10 holding registers, 10 input registers
+    Modbus::DataArea modbusDataAreaWithMaxRegisters{}; // 2000 coils, 2000 discrete inputs, 123 holding registers, 123 input registers
 
     void SetUp() override {
 
@@ -27,88 +28,132 @@ protected:
         holdingRegisters = {Modbus::HoldingRegister(1, 0x1234), Modbus::HoldingRegister(2, 0x5678)};
         inputRegisters = {Modbus::InputRegister(1, 0x9ABC), Modbus::InputRegister(2, 0xDEF0)};
 
+        // Initialize the modbus data areas with 10 registers each
+        modbusDataAreaWithTenRegistersEach.generateCoils(0, 10, Modbus::ValueGenerationType::Ones);
+        modbusDataAreaWithTenRegistersEach.generateDiscreteInputs(0, 10, Modbus::ValueGenerationType::Ones);
+        modbusDataAreaWithTenRegistersEach.generateHoldingRegisters(0, 10, Modbus::ValueGenerationType::Ones);
+        modbusDataAreaWithTenRegistersEach.generateInputRegisters(0, 10, Modbus::ValueGenerationType::Ones);
 
-        for (int i = 1; i < 11; ++i) {
-            auto coil = Modbus::Coil(i, true);
-            modbusDataArea.insertCoil(Modbus::Coil(i, i % 2 == 0));
-            modbusDataArea.insertDiscreteInput(Modbus::DiscreteInput(i, i % 2 == 0));
-            modbusDataArea.insertHoldingRegister(Modbus::HoldingRegister(i, i));
-            modbusDataArea.insertInputRegister(Modbus::InputRegister(i, i));
-        }
+        // Generate the maximum number of registers
+        modbusDataAreaWithMaxRegisters.generateCoils(0, Modbus::MAX_COILS,
+                                                     Modbus::ValueGenerationType::Zeros);
+        modbusDataAreaWithMaxRegisters.generateDiscreteInputs(0, Modbus::MAX_DISCRETE_INPUTS,
+                                                              Modbus::ValueGenerationType::Zeros);
+        modbusDataAreaWithMaxRegisters.generateHoldingRegisters(0, Modbus::MAX_HOLDING_REGISTERS,
+                                                                Modbus::ValueGenerationType::Zeros);
+        modbusDataAreaWithMaxRegisters.generateInputRegisters(0, Modbus::MAX_INPUT_REGISTERS,
+                                                              Modbus::ValueGenerationType::Zeros);
     }
 };
 
 
+/*********************************************************************************************************************
+\section  Read Coils Tests
 
-// Coil Registers Tests
-TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsCorrectData) {
+    The following tests are for the Read Coils function code (0x01). The tests cover the following scenarios:
+    -  The response returns the correct data when the quantity is a multiple of 8
+    -  The response returns the correct data when the quantity is an odd number
+    -  The response returns the correct data when the quantity is 1
+    -  The response returns an exception when the address is invalid
+    -  The response returns an exception when the quantity is invalid
+    -  The response returns an exception when the range exceeds the maximum number of coils
+    -  The response returns the correct data when the maximum number of coils is requested
+    @see ReadCoilsResponseReturnsCorrectDataWithMultipleOfEight
+    @see ReadCoilsResponseReturnsCorrectDataForOddNumberOfCoils
+    @see ReadCoilsResponseReturnsCorrectDataForSingleCoil
+    @see ReadCoilsResponseReturnsExceptionForInvalidAddress
+    @see ReadCoilsResponseReturnsExceptionForInvalidQuantity
+    @see ReadCoilsResponseReturnsExceptionForRangeExceedingMax
+    @see ReadCoilsCorrectDataForMaxRegisters
+ *********************************************************************************************************************/
+TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsCorrectDataWithMultipleOfEight) {
 
-    Modbus::PDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
-                    modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x01},
+                     std::byte{0x00}, // Starting address MSB
+                     std::byte{0x01}, // Starting address LSB; Address = 1
+                     std::byte{0x00}, // Quantity of coils MSB
+                     std::byte{0x08}}, // Quantity of coils LSB; Quantity = 8
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
-    ASSERT_EQ(response.size(), 4);
-    ASSERT_EQ(response[0], std::byte{0x01});
-    ASSERT_EQ(response[1], std::byte{0x02});
-    ASSERT_EQ(response[2], std::byte{0b10101010});
-    ASSERT_EQ(response[3], std::byte{0b00000010});
+    ASSERT_EQ(response.size(), 3);
+    ASSERT_EQ(response[0], std::byte{0x01}); // Function code: Read Coils (1)
+    ASSERT_EQ(response[1], std::byte{0x01}); // One byte representing 8 coils
+    ASSERT_EQ(response[2], std::byte{0b11111111}); // 8 coils with value 1
 }
 
 TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsCorrectDataForOddNumberOfCoils) {
 
-    Modbus::PDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x05}},
-                    modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x01}, // Function code: Read Coils (1)
+                     std::byte{0x00}, // Starting address MSB
+                     std::byte{0x01}, // Starting address LSB; Address = 1
+                     std::byte{00}, // Quantity of coils MSB
+                     std::byte{0x09}}, // Quantity of coils LSB; Quantity = 9
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
-    ASSERT_EQ(response.size(), 3);
-    ASSERT_EQ(response[0], std::byte{0x01});
-    ASSERT_EQ(response[1], std::byte{0x01});
-    ASSERT_EQ(response[2], std::byte{0b00001010});
+    ASSERT_EQ(response.size(), 4);
+    ASSERT_EQ(response[0], std::byte{0x01}); // Function code: Read Coils (1)
+    ASSERT_EQ(response[1], std::byte{0x02}); // Two bytes representing 9 coils
+    ASSERT_EQ(response[2], std::byte{0b11111111}); // 8 coils with value 1
+    ASSERT_EQ(response[3], std::byte{0b00000001}); // 1 coil with value 1, the rest are 0
 }
 
 TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsCorrectDataForSingleCoil) {
 
-    Modbus::PDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x01}},
-                    modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x01}, // Function code: Read Coils (1)
+                     std::byte{0x00}, // Starting address MSB
+                     std::byte{0x01}, // Starting address LSB; Address = 1
+                     std::byte{00}, // Quantity of coils MSB
+                     std::byte{0x01}}, // Quantity of coils LSB; Quantity = 1
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
     ASSERT_EQ(response.size(), 3);
-    ASSERT_EQ(response[0], std::byte{0x01});
-    ASSERT_EQ(response[1], std::byte{0x01});
-    ASSERT_EQ(response[2], std::byte{0b00000000});
+    ASSERT_EQ(response[0], std::byte{0x01}); // Function code: Read Coils (1)
+    ASSERT_EQ(response[1], std::byte{0x01}); // One byte representing 1 coil
+    ASSERT_EQ(response[2], std::byte{0b00000001}); // 1 coil with value 1, the rest are 0
 }
 
 TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsExceptionForInvalidAddress) {
 
-    Modbus::PDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x0F}, std::byte{00}, std::byte{0x0A}},
-                    modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x01}, // Function code: Read Coils (1)
+                     std::byte{0x00}, // Starting address MSB
+                     std::byte{0x0F}, // Starting address LSB; Address = 15 (invalid)
+                     std::byte{00}, // Quantity of coils MSB
+                     std::byte{0x0A}},// Quantity of coils LSB; Quantity = 10
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
     ASSERT_EQ(response.size(), 2);
-    ASSERT_EQ(response[0], std::byte{0x81});
-    ASSERT_EQ(response[1], std::byte{0x02});
+    ASSERT_EQ(response[0], std::byte{0x81}); // Exception code: 0x80 + 0x01
+    ASSERT_EQ(response[1], std::byte{0x02}); // Exception code: 0x02 (Illegal Data Address Exception)
 }
 
 TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsExceptionForInvalidQuantity) {
 
-    Modbus::PDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0F}},
-                    modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x01}, // Function code: Read Coils (1)
+                     std::byte{0x00}, // Starting address MSB
+                     std::byte{0x01}, // Starting address LSB; Address = 1
+                     std::byte{0x00}, // Quantity of coils MSB
+                     std::byte{0x0F}}, // Quantity of coils LSB; Quantity = 15 (invalid)
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
     ASSERT_EQ(response.size(), 2);
-    ASSERT_EQ(response[0], std::byte{0x81});
-    ASSERT_EQ(response[1], std::byte{0x02});
+    ASSERT_EQ(response[0], std::byte{0x81}); // Exception code: 0x80 + 0x01
+    ASSERT_EQ(response[1], std::byte{0x02}); // Exception code: 0x02 (Illegal Data Address Exception)
 }
 
 TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsExceptionForRangeExceedingMax) {
 
     Modbus::PDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
-                    modbusDataArea);
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
@@ -119,133 +164,172 @@ TEST_F(ModbusPDUTest, ReadCoilsResponseReturnsExceptionForRangeExceedingMax) {
 
 TEST_F(ModbusPDUTest, ReadCoilsCorrectDataForMaxRegisters) {
 
-    while (modbusDataArea.getAllCoils().size() < 2000) {
-        int prevAddress = modbusDataArea.getAllCoils().back().getAddress();
-        modbusDataArea.insertCoil(Modbus::Coil(prevAddress + 1, true));
-    }
-
-    Modbus::PDU pdu({std::byte{0x01}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD0}},
-                    modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x01}, // Function code: Read Coils (1)
+                     std::byte{0x00}, // Starting address MSB
+                     std::byte{0x01}, // Starting address LSB; Address = 1
+                     std::byte{0x07}, // Quantity of coils MSB
+                     std::byte{0xD0}}, // Quantity of coils LSB; Quantity = 2000
+                    modbusDataAreaWithMaxRegisters);
 
     auto response = pdu.buildResponse();
 
     ASSERT_EQ(response.size(), 252);
-    ASSERT_EQ(response[0], std::byte{0x01});
-    ASSERT_EQ(response[1], std::byte{0xFA});
+    ASSERT_EQ(response[0], std::byte{0x01}); // Function code: Read Coils (1)
+    ASSERT_EQ(response[1], std::byte{0xFA}); // 250 bytes representing 2000 coils
+    // Verify all the data bytes are 0x00
+    for (int i = 2; i < 252; ++i) {
+        ASSERT_EQ(response[i], std::byte{0x00});
+    }
 }
 
-// Discrete Inputs Registers Tests
-TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsCorrectData) {
+/*********************************************************************************************************************
+* Discrete Input Registers Tests
+ * The following tests are for the Read Discrete Inputs function code (0x02). The tests cover the following scenarios:
+ * -  The response returns the correct data when the quantity is a multiple of 8
+ * -  The response returns the correct data when the quantity is an odd number
+ * -  The response returns the correct data when the quantity is 1
+ * -  The response returns an exception when the address is invalid
+ * -  The response returns an exception when the quantity is invalid
+ * -  The response returns an exception when the range exceeds the maximum number of discrete inputs
+ * -  The response returns the correct data when the maximum number of discrete inputs is requested
+ * @see ReadDiscreteInputsResponseReturnsCorrectDataWithMultipleOfEight
+ * @see ReadDiscreteInputsResponseReturnsCorrectDataForOddNumberOfDiscreteInputs
+ * @see ReadDiscreteInputsResponseReturnsCorrectDataForSingleCoil
+ * @see ReadDiscreteInputsResponseReturnsExceptionForInvalidAddress
+ * @see ReadDiscreteInputsResponseReturnsExceptionForInvalidQuantity
+ * @see ReadDiscreteInputsResponseReturnsExceptionForRangeExceedingMax
+ * @see ReadDiscreteInputsCorrectDataForMaxRegisters
+ ********************************************************************************************************************/
 
-    Modbus::PDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
-                    modbusDataArea);
+
+TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsCorrectDataWithMultipleOfEight) {
+
+    Modbus::PDU pdu({std::byte{0x02}, // Function code: Read Discrete Inputs (2)
+                     std::byte{0x00}, // Starting address MSB
+                     std::byte{0x01}, // Starting address LSB; Address = 1
+                     std::byte{00}, // Quantity of discrete inputs MSB
+                     std::byte{0x08}}, // Quantity of discrete inputs LSB; Quantity = 8
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
-    ASSERT_EQ(response.size(), 4);
-    ASSERT_EQ(response[0], std::byte{0x02});
-    ASSERT_EQ(response[1], std::byte{0x02});
-    ASSERT_EQ(response[2], std::byte{0b10101010});
-    ASSERT_EQ(response[3], std::byte{0b00000010});
+    ASSERT_EQ(response.size(), 3);
+    ASSERT_EQ(response[0], std::byte{0x02}); // Function code: Read Discrete Inputs (2)
+    ASSERT_EQ(response[1], std::byte{0x01}); // One byte representing 8 discrete inputs
+    ASSERT_EQ(response[2], std::byte{0b11111111}); // 8 discrete inputs with value 1
 }
 
 TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsCorrectDataForOddNumberOfDiscreteInputs) {
 
-    Modbus::PDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x05}},
-                    modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x02},
+                     std::byte{0x00}, // Starting address MSB
+                     std::byte{0x01}, //    Starting address LSB; Address = 1
+                     std::byte{00},  // Quantity of discrete inputs MSB
+                     std::byte{0x09}}, // Quantity of discrete inputs LSB; Quantity = 9
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
-    ASSERT_EQ(response.size(), 3);
-    ASSERT_EQ(response[0], std::byte{0x02});
-    ASSERT_EQ(response[1], std::byte{0x01});
-    ASSERT_EQ(response[2], std::byte{0b00001010});
+    ASSERT_EQ(response.size(), 4);
+    ASSERT_EQ(response[0], std::byte{0x02}); // Function code: Read Discrete Inputs (2)
+    ASSERT_EQ(response[1], std::byte{0x02}); // Two bytes representing 9 discrete inputs
+    ASSERT_EQ(response[2], std::byte{0b11111111}); // 8 discrete inputs with value 1
+    ASSERT_EQ(response[3], std::byte{0b00000001}); // 1 discrete input with value 1, the rest are 0
 }
 
 TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsCorrectDataForSingleCoil) {
 
-    Modbus::PDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x01}},
-                    modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x02}, // Function code: Read Discrete Inputs (2)
+                     std::byte{0x00}, // Starting address MSB
+                     std::byte{0x01}, // Starting address LSB; Address = 1
+                     std::byte{0x00}, //  Quantity of discrete inputs MSB
+                     std::byte{0x01}}, // Quantity of discrete inputs LSB; Quantity = 1
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
     ASSERT_EQ(response.size(), 3);
-    ASSERT_EQ(response[0], std::byte{0x02});
-    ASSERT_EQ(response[1], std::byte{0x01});
-    ASSERT_EQ(response[2], std::byte{0b00000000});
+    ASSERT_EQ(response[0], std::byte{0x02}); // Function code: Read Discrete Inputs (2)
+    ASSERT_EQ(response[1], std::byte{0x01}); // One byte representing 1 discrete input
+    ASSERT_EQ(response[2], std::byte{0b00000001}); // 1 discrete input with value 1, the rest are 0
 }
 
 TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidAddress) {
 
-    Modbus::PDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x0F}, std::byte{00}, std::byte{0x0A}},
-                    modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x02},// Function code: Read Discrete Inputs (2)
+                     std::byte{0x00}, // Starting address MSB
+                     std::byte{0x0F}, // Starting address LSB; Address = 15 (invalid)
+                     std::byte{0x00}, // Quantity of discrete inputs MSB
+                     std::byte{0x0A}}, // Quantity of discrete inputs LSB; Quantity = 10
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
     ASSERT_EQ(response.size(), 2);
-    ASSERT_EQ(response[0], std::byte{0x82});
-    ASSERT_EQ(response[1], std::byte{0x02});
+    ASSERT_EQ(response[0], std::byte{0x82}); // Exception code: 0x80 + 0x02
+    ASSERT_EQ(response[1], std::byte{0x02}); // Exception code: 0x02 (Illegal Data Address Exception)
 }
 
 TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidQuantity) {
 
-    Modbus::PDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0F}},
-                    modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x02}, // Function code: Read Discrete Inputs (2)
+                     std::byte{0x00}, // Starting address MSB
+                     std::byte{0x01}, // Starting address LSB; Address = 1
+                     std::byte{0x00}, // Quantity of discrete inputs MSB
+                     std::byte{0x0F}}, // Quantity of discrete inputs LSB; Quantity = 15 (invalid)
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
     ASSERT_EQ(response.size(), 2);
-    ASSERT_EQ(response[0], std::byte{0x82});
-    ASSERT_EQ(response[1], std::byte{0x02});
+    ASSERT_EQ(response[0], std::byte{0x82}); // Exception code: 0x80 + 0x02
+    ASSERT_EQ(response[1], std::byte{0x02}); // Exception code: 0x02 (Illegal Data Address Exception)
 }
 
 TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForRangeExceedingMax) {
 
-    Modbus::PDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
-                    modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x02}, // Function code: Read Discrete Inputs (2)
+                     std::byte{0x00}, // Starting address MSB
+                     std::byte{0x01}, // Starting address LSB; Address = 1
+                     std::byte{0x07},  // Quantity of discrete inputs MSB
+                     std::byte{0xD1}}, // Quantity of discrete inputs LSB; Quantity = 2000 (invalid)
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
-    ASSERT_EQ(response.size(), 2);
-    ASSERT_EQ(response[0], std::byte{0x82});
-    ASSERT_EQ(response[1], std::byte{0x02});
+    ASSERT_EQ(response.size(), 2); // Exception code: 0x80 + 0x02
+    ASSERT_EQ(response[0], std::byte{0x82}); // Exception code: 0x80 + 0x02
+    ASSERT_EQ(response[1], std::byte{0x02}); // Exception code: 0x02 (Illegal Data Address Exception)
 }
 
 TEST_F(ModbusPDUTest, ReadDiscreteInputsCorrectDataForMaxRegisters) {
 
-    while (modbusDataArea.getAllDiscreteInputs().size() < 2000) {
-        int prevAddress = modbusDataArea.getAllDiscreteInputs().back().getAddress();
-        modbusDataArea.insertDiscreteInput(Modbus::DiscreteInput(prevAddress + 1, true));
-    }
-
-    Modbus::PDU pdu({std::byte{0x02}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD0}},
-                    modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x02}, // Function code: Read Discrete Inputs (2)
+                     std::byte{0x00}, // Starting address MSB
+                     std::byte{0x01}, // Starting address LSB; Address = 1
+                     std::byte{0x07}, // Quantity of discrete inputs MSB
+                     std::byte{0xD0}}, // Quantity of discrete inputs LSB; Quantity = 2000
+                    modbusDataAreaWithMaxRegisters);
 
     auto response = pdu.buildResponse();
 
     ASSERT_EQ(response.size(), 252);
-    ASSERT_EQ(response[0], std::byte{0x02});
-    ASSERT_EQ(response[1], std::byte{0xFA});
+    ASSERT_EQ(response[0], std::byte{0x02}); // Function code: Read Discrete Inputs (2)
+    ASSERT_EQ(response[1], std::byte{0xFA}); // 250 bytes representing 2000 discrete inputs
+    // Verify all the data bytes are 0x00
+    for (int i = 2; i < 252; ++i) {
+        ASSERT_EQ(response[i], std::byte{0x00});
+    }
 }
 
 
-TEST_F(ModbusPDUTest, ReadDiscreteInputsResponseReturnsExceptionForInvalidFunctionCode) {
-
-    Modbus::PDU pdu({std::byte{0x2C}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
-                    modbusDataArea);
-
-    auto response = pdu.buildResponse();
-
-    ASSERT_EQ(response.size(), 2);
-    ASSERT_EQ(response[0], std::byte{0x80 + 0x2C});
-    ASSERT_EQ(response[1], std::byte{0x01});
-}
-
+// *********************************************************************************************************************
 // Read Holding Registers Tests
+// *********************************************************************************************************************
 TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsCorrectData) {
 
     Modbus::PDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
-                    modbusDataArea);
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
@@ -277,7 +361,7 @@ TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsCorrectData) {
 TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsCorrectDataForSingleRegister) {
 
     Modbus::PDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x01}},
-                    modbusDataArea);
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
@@ -291,7 +375,7 @@ TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsCorrectDataForSingleReg
 TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForInvalidAddress) {
 
     Modbus::PDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x0F}, std::byte{00}, std::byte{0x0A}},
-                    modbusDataArea);
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
@@ -303,7 +387,7 @@ TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForInvalidAddr
 TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForInvalidQuantity) {
 
     Modbus::PDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0F}},
-                    modbusDataArea);
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
@@ -315,7 +399,7 @@ TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForInvalidQuan
 TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForRangeExceedingMax) {
 
     Modbus::PDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
-                    modbusDataArea);
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
@@ -326,26 +410,29 @@ TEST_F(ModbusPDUTest, ReadHoldingRegistersResponseReturnsExceptionForRangeExceed
 
 TEST_F(ModbusPDUTest, ReadHoldingRegistersCorrectDataForMaxRegisters) {
 
-    while (modbusDataArea.getAllHoldingRegisters().size() < 125) {
-        int prevAddress = modbusDataArea.getAllHoldingRegisters().back().getAddress();
-        modbusDataArea.insertHoldingRegister(Modbus::HoldingRegister(prevAddress + 1, prevAddress + 1));
-    }
-
-    Modbus::PDU pdu({std::byte{0x03}, std::byte{0x00}, std::byte{0x01}, std::byte{0x00}, std::byte{0x7D}},
-                    modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x03}, // Function code: Read Holding Registers (3)
+                     std::byte{0x00}, // Starting address MSB
+                     std::byte{0x01}, // Starting address LSB; Address = 1
+                     std::byte{0x00}, // Quantity of registers MSB
+                     static_cast<std::byte>(Modbus::MAX_HOLDING_REGISTERS)}, // Quantity of registers LSB; Quantity = 123
+                    modbusDataAreaWithMaxRegisters);
 
     auto response = pdu.buildResponse();
 
-    ASSERT_EQ(response.size(), 252);
+    ASSERT_EQ(response.size(), 248);
     ASSERT_EQ(response[0], std::byte{0x03});
-    ASSERT_EQ(response[1], std::byte{0xFA});
+    ASSERT_EQ(response[1], std::byte{0xF6});
 }
 
 // Read Input Registers Tests
 TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsCorrectData) {
 
-    Modbus::PDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0A}},
-                    modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x04},
+                     std::byte{0x00},
+                     std::byte{0x01},
+                     std::byte{00},
+                     std::byte{0x0A}},
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
@@ -353,31 +440,31 @@ TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsCorrectData) {
     ASSERT_EQ(response[0], std::byte{0x04});
     ASSERT_EQ(response[1], std::byte{0x14});
     ASSERT_EQ(response[2], std::byte{0x00});
-    ASSERT_EQ(response[3], std::byte{0x01});
+    ASSERT_EQ(response[3], std::byte{0x00});
     ASSERT_EQ(response[4], std::byte{0x00});
-    ASSERT_EQ(response[5], std::byte{0x02});
+    ASSERT_EQ(response[5], std::byte{0x00});
     ASSERT_EQ(response[6], std::byte{0x00});
-    ASSERT_EQ(response[7], std::byte{0x03});
+    ASSERT_EQ(response[7], std::byte{0x00});
     ASSERT_EQ(response[8], std::byte{0x00});
-    ASSERT_EQ(response[9], std::byte{0x04});
+    ASSERT_EQ(response[9], std::byte{0x00});
     ASSERT_EQ(response[10], std::byte{0x00});
-    ASSERT_EQ(response[11], std::byte{0x05});
+    ASSERT_EQ(response[11], std::byte{0x00});
     ASSERT_EQ(response[12], std::byte{0x00});
-    ASSERT_EQ(response[13], std::byte{0x06});
+    ASSERT_EQ(response[13], std::byte{0x00});
     ASSERT_EQ(response[14], std::byte{0x00});
-    ASSERT_EQ(response[15], std::byte{0x07});
+    ASSERT_EQ(response[15], std::byte{0x00});
     ASSERT_EQ(response[16], std::byte{0x00});
-    ASSERT_EQ(response[17], std::byte{0x08});
+    ASSERT_EQ(response[17], std::byte{0x00});
     ASSERT_EQ(response[18], std::byte{0x00});
-    ASSERT_EQ(response[19], std::byte{0x09});
+    ASSERT_EQ(response[19], std::byte{0x00});
     ASSERT_EQ(response[20], std::byte{0x00});
-    ASSERT_EQ(response[21], std::byte{0x0A});
+    ASSERT_EQ(response[21], std::byte{0x00});
 }
 
 TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsCorrectDataForSingleRegister) {
 
     Modbus::PDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x01}},
-                    modbusDataArea);
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
@@ -391,7 +478,7 @@ TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsCorrectDataForSingleRegist
 TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForInvalidAddress) {
 
     Modbus::PDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x0F}, std::byte{00}, std::byte{0x0A}},
-                    modbusDataArea);
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
@@ -403,7 +490,7 @@ TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForInvalidAddress
 TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForInvalidQuantity) {
 
     Modbus::PDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{00}, std::byte{0x0F}},
-                    modbusDataArea);
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
@@ -415,7 +502,7 @@ TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForInvalidQuantit
 TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForRangeExceedingMax) {
 
     Modbus::PDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{0x07}, std::byte{0xD1}},
-                    modbusDataArea);
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
@@ -426,13 +513,13 @@ TEST_F(ModbusPDUTest, ReadInputRegisterResponseReturnsExceptionForRangeExceeding
 
 TEST_F(ModbusPDUTest, ReadInputRegisterCorrectDataForMaxRegisters) {
 
-    while (modbusDataArea.getAllInputRegisters().size() < 125) {
-        int prevAddress = modbusDataArea.getAllInputRegisters().back().getAddress();
-        modbusDataArea.insertInputRegister(Modbus::InputRegister(prevAddress + 1, prevAddress + 1));
+    while (modbusDataAreaWithTenRegistersEach.getAllInputRegisters().size() < 125) {
+        int prevAddress = modbusDataAreaWithTenRegistersEach.getAllInputRegisters().back().getAddress();
+        modbusDataAreaWithTenRegistersEach.insertInputRegister(Modbus::InputRegister(prevAddress + 1, prevAddress + 1));
     }
 
     Modbus::PDU pdu({std::byte{0x04}, std::byte{0x00}, std::byte{0x01}, std::byte{0x00}, std::byte{0x7D}},
-                    modbusDataArea);
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
@@ -444,7 +531,7 @@ TEST_F(ModbusPDUTest, ReadInputRegisterCorrectDataForMaxRegisters) {
 TEST_F(ModbusPDUTest, WriteSingleCoilInvalidAddressResponse) {
 
     Modbus::PDU pdu({std::byte{0x05}, std::byte{0x00}, std::byte{0x0B}, std::byte{0xFF}, std::byte{0x00}},
-                    modbusDataArea);
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
@@ -456,7 +543,7 @@ TEST_F(ModbusPDUTest, WriteSingleCoilInvalidAddressResponse) {
 TEST_F(ModbusPDUTest, WriteSingleCoilInvalidValueResponse) {
 
     Modbus::PDU pdu({std::byte{0x05}, std::byte{0x00}, std::byte{0x01}, std::byte{0xAB}, std::byte{0xCD}},
-                    modbusDataArea);
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
@@ -467,10 +554,10 @@ TEST_F(ModbusPDUTest, WriteSingleCoilInvalidValueResponse) {
 
 TEST_F(ModbusPDUTest, WriteSingleCoilsCorrectResponse) {
 
-    auto lastCoil = modbusDataArea.getAllCoils().back();
+    auto lastCoil = modbusDataAreaWithTenRegistersEach.getAllCoils().back();
 
     int address = lastCoil.getAddress() + 1;
-    modbusDataArea.insertCoil(Modbus::Coil(address, false));
+    modbusDataAreaWithTenRegistersEach.insertCoil(Modbus::Coil(address, false));
     auto valueMsb = std::byte{0xFF};
     auto valueLsb = std::byte{0x00};
 
@@ -478,12 +565,12 @@ TEST_F(ModbusPDUTest, WriteSingleCoilsCorrectResponse) {
     auto addressLsb = static_cast<std::byte>(address & 0xFF);
 
     Modbus::PDU pdu({std::byte{0x05}, addressMsb, addressLsb, valueMsb, valueLsb},
-                    modbusDataArea);
+                    modbusDataAreaWithTenRegistersEach);
 
 
     auto response = pdu.buildResponse();
 
-    auto coil = modbusDataArea.getCoils(address, address).front();
+    auto coil = modbusDataAreaWithTenRegistersEach.getCoils(address, address).front();
 
     ASSERT_TRUE(coil.read());
     ASSERT_EQ(response.size(), 5);
@@ -498,7 +585,7 @@ TEST_F(ModbusPDUTest, WriteSingleCoilsCorrectResponse) {
 TEST_F(ModbusPDUTest, WriteSingleRegisterInvalidAddressResponse) {
 
     Modbus::PDU pdu({std::byte{0x06}, std::byte{0x00}, std::byte{0x0B}, std::byte{0xFF},
-                     std::byte{0x00}}, modbusDataArea);
+                     std::byte{0x00}}, modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
@@ -509,10 +596,10 @@ TEST_F(ModbusPDUTest, WriteSingleRegisterInvalidAddressResponse) {
 
 TEST_F(ModbusPDUTest, WriteSingleRegisterCorrectResponse) {
 
-    auto lastRegister = modbusDataArea.getAllHoldingRegisters().back();
+    auto lastRegister = modbusDataAreaWithTenRegistersEach.getAllHoldingRegisters().back();
 
     int address = lastRegister.getAddress() + 1;
-    modbusDataArea.insertHoldingRegister(Modbus::HoldingRegister(address, 0x0000));
+    modbusDataAreaWithTenRegistersEach.insertHoldingRegister(Modbus::HoldingRegister(address, 0x0000));
     auto valueMsb = std::byte{0xAB};
     auto valueLsb = std::byte{0xCD};
 
@@ -520,11 +607,11 @@ TEST_F(ModbusPDUTest, WriteSingleRegisterCorrectResponse) {
     auto addressLsb = static_cast<std::byte>(address & 0xFF);
 
     Modbus::PDU pdu({std::byte{0x06}, addressMsb, addressLsb, valueMsb, valueLsb},
-                    modbusDataArea);
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
-    auto reg = modbusDataArea.getHoldingRegisters(address, 1).front();
+    auto reg = modbusDataAreaWithTenRegistersEach.getHoldingRegisters(address, 1).front();
 
     ASSERT_EQ(reg.read(), 0xABCD);
     ASSERT_EQ(response.size(), 5);
@@ -537,8 +624,14 @@ TEST_F(ModbusPDUTest, WriteSingleRegisterCorrectResponse) {
 
 TEST_F(ModbusPDUTest, WriteMultipleCoilsInvalidAddressResponse) {
 
-    Modbus::PDU pdu({std::byte{0x0F}, std::byte{0x00}, std::byte{0x0B}, std::byte{0xFF},
-                     std::byte{0x00}, std::byte{0x01}, std::byte{0x01}}, modbusDataArea);
+    Modbus::PDU pdu({std::byte{0x0F}, // Function Code: Write Multiple Coils (15)
+                     std::byte{0x00}, // Starting Address MSB
+                     std::byte{0x0B}, // Starting Address LSB; Starting Address = 11
+                     std::byte{0x00}, // Quantity of Outputs MSB
+                     std::byte{0x02}, // Quantity of Outputs LSB; Quantity of Outputs = 2
+                     std::byte{0x01}, // Byte Count = 1
+                     std::byte{0b00000011}}, // Outputs Value
+                    modbusDataAreaWithTenRegistersEach);
 
     auto response = pdu.buildResponse();
 
@@ -547,7 +640,7 @@ TEST_F(ModbusPDUTest, WriteMultipleCoilsInvalidAddressResponse) {
     ASSERT_EQ(response[1], std::byte{0x02});
 }
 
-TEST_F(ModbusPDUTest, WriteMultipleCoilsResponseInvalidQuantity) {
+TEST_F(ModbusPDUTest, WriteMultipleCoilsResponseInvalidQuantityResponse) {
     Modbus::DataArea dataArea;
     Modbus::PDU pdu({std::byte(0x0F), std::byte(0x00), std::byte(0x01), std::byte(0x07), std::byte(0xD1),
                      std::byte(0x03), std::byte(0xAC), std::byte(0xDB), std::byte(0x35)}, dataArea);
@@ -558,12 +651,35 @@ TEST_F(ModbusPDUTest, WriteMultipleCoilsResponseInvalidQuantity) {
     ASSERT_EQ(response[1], std::byte(0x03));
 }
 
-TEST_F(ModbusPDUTest, WriteMultipleCoilsResponseInvalidByteCount) {
+TEST_F(ModbusPDUTest, WriteMultipleCoilsResponseInvalidByteCountResponse) {
     Modbus::DataArea dataArea;
     Modbus::PDU pdu({std::byte(0x0F), std::byte(0x00), std::byte(0x01), std::byte(0x07), std::byte(0xD0),
                      std::byte(0x03), std::byte(0xAC), std::byte(0xDB), std::byte(0x35)}, dataArea);
 
     auto response = pdu.buildResponse();
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte(0x8F));
+    ASSERT_EQ(response[1], std::byte(0x03));
+}
+
+TEST_F(ModbusPDUTest, WriteMultipleCoilsRigthQuantityNotEnoughDataToWriteResponse) {
+    Modbus::DataArea dataArea;
+    for (int i = 1; i < 2001; i++) {
+        dataArea.insertCoil(Modbus::Coil(i, false));
+    }
+
+    std::vector<std::byte> rawData = {static_cast<std::byte>(Modbus::FunctionCode::WriteMultipleCoils),
+                                      std::byte(0x00), std::byte(0x01), std::byte(0x07),
+                                      std::byte(0xD0), std::byte(0xFA)};
+
+    for (int i = 0; i < 125; i++) {
+        rawData.push_back(std::byte(0xFF));
+    }
+
+    Modbus::PDU pdu(rawData, dataArea);
+
+    auto response = pdu.buildResponse();
+
     ASSERT_EQ(response.size(), 2);
     ASSERT_EQ(response[0], std::byte(0x8F));
     ASSERT_EQ(response[1], std::byte(0x03));
@@ -587,7 +703,7 @@ TEST_F(ModbusPDUTest, WriteMultipleCoilsCorrectResponse) {
 
     auto response = pdu.buildResponse();
 
-   for (auto coil : dataArea.getAllCoils()) {
+    for (auto coil: dataArea.getAllCoils()) {
         ASSERT_TRUE(coil.read());
     }
 
@@ -599,10 +715,96 @@ TEST_F(ModbusPDUTest, WriteMultipleCoilsCorrectResponse) {
     ASSERT_EQ(response[4], std::byte(0xD0));
 }
 
+TEST_F(ModbusPDUTest, WriteMultipleRegistersInvalidAddressResponse) {
+
+    Modbus::PDU pdu({std::byte{0x10}, std::byte{0x00}, std::byte{0x0B}, std::byte{0x00},
+                     std::byte{0x02}, std::byte{0x02}, std::byte{0xFF}, std::byte{0xFF}, std::byte{0xFF},
+                     std::byte{0xFF}}, modbusDataAreaWithTenRegistersEach);
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte{0x90});
+    ASSERT_EQ(response[1], std::byte{0x03});
+}
+
+TEST_F(ModbusPDUTest, WriteMultipleRegistersInvalidQuantityResponse) {
+
+    // Modbus Area has 10 registers, so trying to write 11 registers should return an exception
+    std::vector<std::byte> rawData = {std::byte{0x10}, std::byte{0x00}, std::byte{0x01}, std::byte{0x00},
+                                      std::byte{0x0B}, std::byte{0x0B}};
+    for (int i = 0; i < 12; i++) {
+        rawData.push_back(std::byte{0xFF});
+        rawData.push_back(std::byte{0xFF});
+    }
+
+    Modbus::PDU pdu(rawData, modbusDataAreaWithTenRegistersEach);
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte{0x90});
+    ASSERT_EQ(response[1], std::byte{0x03});
+}
+
+TEST_F(ModbusPDUTest, WriteMultipleRegistersRigthQuantityNotEnoughDataToWriteResponse) {
+
+    // Modbus Area has 10 registers, so trying to write 11 registers should return an exception
+    std::vector<std::byte> rawData = {std::byte{0x10}, std::byte{0x00}, std::byte{0x01}, std::byte{0x00},
+                                      std::byte{0x0A}, std::byte{0x0A}};
+    for (int i = 0; i < 2; i++) {
+        rawData.push_back(std::byte{0xFF});
+        rawData.push_back(std::byte{0xFF});
+    }
+
+    Modbus::PDU pdu(rawData, modbusDataAreaWithTenRegistersEach);
+
+    auto response = pdu.buildResponse();
+
+    ASSERT_EQ(response.size(), 2);
+    ASSERT_EQ(response[0], std::byte{0x90});
+    ASSERT_EQ(response[1], std::byte{0x03});
+}
+
+TEST_F(ModbusPDUTest, WriteMultipleRegistersCorrectResponse) {
+
+    Modbus::DataArea dataArea;
+    for (int i = 1; i < Modbus::MAX_HOLDING_REGISTERS + 1; i++) {
+        dataArea.insertHoldingRegister(Modbus::HoldingRegister(i, 0));
+    }
+
+    std::vector<std::byte> rawData = {std::byte{0x10}, // Function Code: Write Multiple Registers (10)
+                                      std::byte{0x00}, // Starting Address MSB
+                                      std::byte{0x01}, // Starting Address LSB; Starting Address = 1
+                                      std::byte{0x00}, // Quantity of Registers MSB
+                                      std::byte{0x7B}, // Quantity of Registers LSB ; Quantity of Registers = 123
+                                      std::byte{0xF6}}; // Byte Count = 123 * 2 = 246
+
+    for (int i = 1; i < Modbus::MAX_HOLDING_REGISTERS + 1; i++) {
+        rawData.push_back(std::byte{0xFF});
+        rawData.push_back(std::byte{0xFF});
+    }
+
+    Modbus::PDU pdu(rawData, dataArea);
+
+    auto response = pdu.buildResponse();
+
+    for (auto reg: dataArea.getAllHoldingRegisters()) {
+        ASSERT_EQ(reg.read(), 65535);
+    }
+
+    ASSERT_EQ(response.size(), 5);
+    ASSERT_EQ(response[0], std::byte{0x10});
+    ASSERT_EQ(response[1], std::byte{0x00});
+    ASSERT_EQ(response[2], std::byte{0x01});
+    ASSERT_EQ(response[3], std::byte{0x00});
+    ASSERT_EQ(response[4], std::byte{0x7B});
+}
+
 TEST(ModbusTest, BytesToMBAPReturnsCorrectMBAPForValidBytes) {
     std::vector<std::byte> bytes = {std::byte(0x01), std::byte(0x02), std::byte(0x03), std::byte(0x04),
                                     std::byte(0x05), std::byte(0x06), std::byte(0x07)};
-    Modbus::MBAP expectedMBAP;
+    Modbus::MBAP expectedMBAP{};
     expectedMBAP.transactionIdentifier = 0x0102;
     expectedMBAP.protocolIdentifier = 0x0304;
     expectedMBAP.length = 0x0506;

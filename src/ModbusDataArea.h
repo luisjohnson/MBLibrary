@@ -11,8 +11,8 @@
 namespace Modbus {
     constexpr int MAX_COILS = 2000;
     constexpr int MAX_DISCRETE_INPUTS = 2000;
-    constexpr int MAX_HOLDING_REGISTERS = 125;
-    constexpr int MAX_INPUT_REGISTERS = 125;
+    constexpr int MAX_HOLDING_REGISTERS = 123;
+    constexpr int MAX_INPUT_REGISTERS = 123;
     /**
          * @enum ValueGenerationType
          * @brief Enumeration for different types of value generation.
