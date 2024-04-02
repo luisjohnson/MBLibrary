@@ -13,6 +13,8 @@ namespace Modbus {
     constexpr int MAX_DISCRETE_INPUTS = 2000;
     constexpr int MAX_HOLDING_REGISTERS = 123;
     constexpr int MAX_INPUT_REGISTERS = 123;
+
+    constexpr int MAX_REGISTER_DATA_AREA_SIZE = 1 << 16;
     /**
          * @enum ValueGenerationType
          * @brief Enumeration for different types of value generation.
@@ -26,11 +28,12 @@ namespace Modbus {
          *   - Ones: Generate values as ones.
          */
     enum class ValueGenerationType {
-        Random,
-        Incremental,
-        Decremental,
-        Zeros,
-        Ones
+        Random, // Generate random values
+        Incremental, //  Generate values in incremental order
+        Decremental, // Generate values in decremental order
+        Zeros, // Generate values as zeros
+        Ones, // Generate values as ones
+        Max // Maximum value for the data type
     };
 
     /**
@@ -41,7 +44,7 @@ namespace Modbus {
      * thread-safety by using a shared mutex to control access to the data. It also provides methods for
      * inserting, retrieving, and modifying the registers and coils.
      */
-    class DataArea  {
+    class DataArea {
     public:
         /**
          * @class DataArea
@@ -348,9 +351,6 @@ namespace Modbus {
             std::lock_guard<std::mutex> lock(_mutex);
             // Calculate the end index of the range
             int end = start + length - 1;
-            // Throwing an exception if the requested range is invalid
-            if (length > 2000 || length > registers.size())
-                throw std::out_of_range("Requested range is invalid");
             // Find the start and end iterators for the requested range
             auto startIt = std::lower_bound(registers.begin(), registers.end(), start,
                                             [](const T &reg, int start) {
@@ -367,8 +367,37 @@ namespace Modbus {
             return {startIt, endIt};
         }
 
+        /**
+         * @brief This template function is used to retrieve a register from a vector of registers based on its address.
+         *
+         * @tparam T The type of register (Coil, DiscreteInput, HoldingRegister, InputRegister).
+         * @param registers The vector of registers to search in.
+         * @param address The address of the register to retrieve.
+         * @return A pointer to the register if found, otherwise nullptr.
+         *
+         * @details This function performs the following steps:
+         * 1. It uses a static assert to make sure that the provided register type is valid (either Coil, DiscreteInput,
+         *    HoldingRegister, or InputRegister).
+         * 2. It acquires a lock on the mutex object `_mutex` to ensure thread safety.
+         * 3. It searches for a register in the vector `registers` whose address matches the provided `address`.
+         * 4. If the register is found, a pointer to it is returned. Otherwise, nullptr is returned.
+         *
+         * Example Usage:
+         * ```
+         * std::vector<HoldingRegister> registers;
+         * // Populate the registers vector...
+         *
+         * int address = 1234;
+         * HoldingRegister* registerPtr = getRegister(registers, address);
+         * if (registerPtr != nullptr) {
+         *     // Use the register...
+         * }
+         * ```
+         *
+         * @note The function assumes that the registers in the vector `registers` have a member function `getAddress()` that
+         *       returns their address.*/
         template<typename T>
-        T* getRegister(std::vector<T> &registers, int address) {
+        T *getRegister(std::vector<T> &registers, int address) {
             static_assert(std::is_same<T, Coil>::value || std::is_same<T, DiscreteInput>::value ||
                           std::is_same<T, HoldingRegister>::value || std::is_same<T, InputRegister>::value,
                           "Invalid register type.");
@@ -421,6 +450,7 @@ namespace Modbus {
                     }
                     break;
                 case ValueGenerationType::Ones:
+                case ValueGenerationType::Max:
                     for (int i = 0; i < count; i++) {
                         insertRegister(registers, T(startAddress + i, true));
                     }
@@ -433,7 +463,8 @@ namespace Modbus {
                 case ValueGenerationType::Decremental:
                 case ValueGenerationType::Incremental:
                 default:
-                    throw std::invalid_argument("Invalid value generation type.");
+                    throw std::invalid_argument(
+                            "Invalid value generation type. Boolean can have only 2 possible values.");
             }
         }
 
@@ -491,6 +522,11 @@ namespace Modbus {
                         insertRegister(registers, T(startAddress + i, i));
                     }
                     break;
+                    // TODO: Implement tests for the Max value generation type
+                    case ValueGenerationType::Max:
+                        for (int i = 0; i < count; i++) {
+                            insertRegister(registers, T(startAddress + i, std::numeric_limits<int>::max()));
+                        }
                 default:
                     throw std::invalid_argument("Invalid value generation type.");
             }

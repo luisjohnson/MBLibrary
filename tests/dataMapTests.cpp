@@ -8,9 +8,14 @@
 class ModbusDataAreaTestWithFixture : public ::testing::Test {
 protected:
     std::shared_ptr<Modbus::DataArea> modbusDataArea;
+    Modbus::DataArea dataAreaWitTenRegistersEach;
 
     void SetUp() override {
         modbusDataArea = std::make_shared<Modbus::DataArea>();
+        dataAreaWitTenRegistersEach.generateCoils(0, 10, Modbus::ValueGenerationType::Ones);
+        dataAreaWitTenRegistersEach.generateDiscreteInputs(0, 10, Modbus::ValueGenerationType::Ones);
+        dataAreaWitTenRegistersEach.generateHoldingRegisters(0, 10, Modbus::ValueGenerationType::Ones);
+        dataAreaWitTenRegistersEach.generateInputRegisters(0, 10, Modbus::ValueGenerationType::Ones);
     }
 };
 
@@ -268,6 +273,23 @@ TEST_F(ModbusDataAreaTestWithFixture, generateInputRegistersWithInvalidCount) {
     EXPECT_THROW(modbusDataArea->generateInputRegisters(0, 126,
                                                         Modbus::ValueGenerationType::Zeros), std::out_of_range);
 }
+
+TEST_F(ModbusDataAreaTestWithFixture, ModbusDataAreaTestInsertAndRetrieveMultipleHoldingRegisters)
+{
+    auto registers = dataAreaWitTenRegistersEach.getHoldingRegisters(0, 10);
+    ASSERT_EQ(registers.size(), 10);
+    for (int i = 0; i < 10; i++) {
+        ASSERT_EQ(registers[i].getAddress(), i);
+        ASSERT_EQ(registers[i].read(), 1);
+    }
+}
+
+TEST_F(ModbusDataAreaTestWithFixture, ModbusAreaRetriveMultipleHoldingsRegistersThrowsExceptionWhenOutOfRange)
+{
+    ASSERT_THROW(dataAreaWitTenRegistersEach.getHoldingRegisters(0, 11), std::out_of_range);
+    ASSERT_THROW(dataAreaWitTenRegistersEach.getHoldingRegisters(1, 10), std::out_of_range);
+}
+
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
