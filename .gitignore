@@ -30,3 +30,6 @@ vendor/
 # Miscellaneous
 .DS_Store
 Thumbs.db
+
+/external/*
+!/external
