@@ -25,6 +25,8 @@ else ()
             src/ModbusUtilities.h
             src/ModbusServer.cpp
             src/ModbusServer.h
+            src/ModbusClient.cpp
+            src/ModbusClient.h
     )
     target_include_directories(MBLibrary PUBLIC src ${Boost_INCLUDE_DIRS})
     target_link_libraries(MBLibrary ${Boost_LIBRARIES})
