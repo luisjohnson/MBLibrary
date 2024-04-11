@@ -33,6 +33,18 @@ namespace Modbus::Utilities {
     uint16_t twoBytesToUint16(std::byte msb, std::byte lsb);
 
     /**
+     * @brief Converts a uint16_t value into an array of two bytes.
+     *
+     * This function takes a 16-bit unsigned integer value and converts it into an array
+     * of two bytes, with the most significant byte
+     * as the first element and the least significant byte as the second element.
+     *
+     * @param value The uint16_t value to be converted.
+     * @return An array of two bytes representing the given uint16_t value.
+     */
+     // TODO: Add tests for uint16ToTwoBytes function
+    std::pair<std::byte, std::byte> uint16ToTwoBytes(uint16_t value);
+    /**
      * @brief Function to generate a random boolean value.
      *
      * @return True if a randomly generated value is 1, false if it is 0.

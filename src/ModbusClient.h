@@ -12,7 +12,7 @@
 namespace Modbus {
     class Client {
     public:
-        explicit Client(const std::string &ip, const std::string &port = "502");
+        explicit Client(std::string ip, int port = 502);
 
         void connect();
 
@@ -38,8 +38,13 @@ namespace Modbus {
         boost::asio::io_context _ioContext;
         boost::asio::ip::tcp::socket _socket;
         std::string _ip;
-        std::string _port;
+        int _port;
+
+        std::vector<std::byte> requestDataFromServer(const std::vector<std::byte> &requestRawData);
+
+        bool isRequestValid(const std::vector<std::byte> &requestRawData, FunctionCode functionCode);
     };
 
 
 #endif //MBLIBRARY_MODBUSCLIENT_H
+}

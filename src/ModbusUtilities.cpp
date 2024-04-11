@@ -28,4 +28,8 @@ namespace Modbus::Utilities {
     }
     return booleans;
 }
+
+    std::pair<std::byte, std::byte> uint16ToTwoBytes(uint16_t value) {
+        return {static_cast<std::byte>(value >> 8), static_cast<std::byte>(value & 0xFF)};
+    }
 }
