@@ -8,11 +8,12 @@
 #include <vector>
 #include <boost/asio.hpp>
 #include "Modbus.h"
+#include "ModbusPDU.h"
 
 namespace Modbus {
     class Client {
     public:
-        explicit Client(const std::string &ip, const std::string &port = "502");
+        explicit Client(std::string ip, std::string port = "502");
 
         void connect();
 
@@ -39,7 +40,11 @@ namespace Modbus {
         boost::asio::ip::tcp::socket _socket;
         std::string _ip;
         std::string _port;
-    };
 
+        static MBAP createMBAP(uint16_t length);
+
+        boost::asio::awaitable<std::vector<std::byte>> sendRequest(const std::vector<std::byte> &request);
+    };
+}
 
 #endif //MBLIBRARY_MODBUSCLIENT_H
