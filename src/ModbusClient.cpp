@@ -61,11 +61,9 @@ std::vector<bool> Modbus::Client::readDiscreteInputs(uint16_t startAddress, uint
 
     request.insert(request.end(), requestPDU.begin(), requestPDU.end());
 
-    boost::asio::co_spawn(_ioContext, [this, &request]() -> boost::asio::awaitable<void> {
-        auto response = co_await sendRequest(request);
-    }, boost::asio::detached);
-
-    return {};
+    //Send the request
+    std::vector<std::byte> response = co_await sendRequest(request);
+    return getBooleanRegisters(quantity, response);
 }
 
 std::vector<uint16_t> Modbus::Client::readHoldingRegisters(uint16_t startAddress, uint16_t quantity) {
@@ -115,5 +113,18 @@ boost::asio::awaitable<std::vector<std::byte>> Modbus::Client::sendRequest(const
     // Resize the response vector to the actual number of bytes received
     response.resize(len);
 
-    co_return response
+    co_return response;
+}
+
+std::vector<bool> Modbus::Client::getBooleanRegisters(int quantity, const std::vector<std::byte> &response) {
+    std::vector<bool> result;
+    result.reserve(quantity);
+
+    for (int i = 0; i < quantity; ++i) {
+        std::byte currentByte = response[response.size() - 2 + i / 8];
+        bool bitValue = static_cast<bool>((static_cast<int>(currentByte) & (0x1 << (i % 8))) >> (i % 8));
+        result.push_back(bitValue);
+    }
+
+    return result;
 }

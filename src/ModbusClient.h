@@ -44,6 +44,9 @@ namespace Modbus {
         static MBAP createMBAP(uint16_t length);
 
         boost::asio::awaitable<std::vector<std::byte>> sendRequest(const std::vector<std::byte> &request);
+
+        std::vector<bool> getBooleanRegisters(int quantity, const std::vector<std::byte> &response)
+
     };
 }
 
