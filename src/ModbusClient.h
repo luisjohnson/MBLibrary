@@ -14,36 +14,36 @@ namespace Modbus {
     public:
         explicit Client(std::string ip, int port = 502);
 
-        void connect();
+        void connect(); // TODO: Implement the method to establish a connection to the Modbus server
 
-        void disconnect();
+        void disconnect(); // TODO: Implement the method to disconnect from the Modbus server
 
-        std::vector<bool> readCoils(uint16_t startAddress, uint16_t quantity);
+        std::vector<bool> readCoils(uint16_t startAddress, uint16_t quantity); // TODO: Implement the method to read coils from the Modbus server
 
-        std::vector<bool> readDiscreteInputs(uint16_t startAddress, uint16_t quantity);
+        std::vector<bool> readDiscreteInputs(uint16_t startAddress, uint16_t quantity); // TODO: Implement the method to read discrete inputs from the Modbus server
 
-        std::vector<uint16_t> readHoldingRegisters(uint16_t startAddress, uint16_t quantity);
+        std::vector<uint16_t> readHoldingRegisters(uint16_t startAddress, uint16_t quantity); // TODO: Implement the method to read holding registers from the Modbus server
 
-        std::vector<uint16_t> readInputRegisters(uint16_t startAddress, uint16_t quantity);
+        std::vector<uint16_t> readInputRegisters(uint16_t startAddress, uint16_t quantity); // TODO: Implement the method to read input registers from the Modbus server
 
-        void writeSingleCoil(uint16_t address, bool value);
+        void writeSingleCoil(uint16_t address, bool value); // TODO: Implement the method to write a single coil to the Modbus server
 
-        void writeSingleRegister(uint16_t address, uint16_t value);
+        void writeSingleRegister(uint16_t address, uint16_t value); // TODO: Implement the method to write a single register to the Modbus server
 
-        void writeMultipleCoils(uint16_t startAddress, uint16_t quantity, const std::vector<bool> &values);
+        void writeMultipleCoils(uint16_t startAddress, uint16_t quantity, const std::vector<bool> &values); // TODO: Implement the method to write multiple coils to the Modbus server
 
-        void writeMultipleRegisters(uint16_t startAddress, uint16_t quantity, const std::vector<uint16_t> &values);
+        void writeMultipleRegisters(uint16_t startAddress, uint16_t quantity, const std::vector<uint16_t> &values); // TODO: Implement the method to write multiple registers to the Modbus server
 
     private:
-        boost::asio::io_context _ioContext;
-        boost::asio::ip::tcp::socket _socket;
-        std::string _ip;
-        int _port;
+        boost::asio::io_context _ioContext; 
+        boost::asio::ip::tcp::socket _socket; 
+        std::string _ip; 
+        int _port; /
 
-        std::vector<std::byte> requestDataFromServer(const std::vector<std::byte> &requestRawData);
+        std::vector<std::byte> requestDataFromServer(const std::vector<std::byte> &requestRawData); // TODO: Implement the method to send a request to the Modbus server and receive the response
 
-        bool isRequestValid(const std::vector<std::byte> &requestRawData, FunctionCode functionCode);
-    };
+        bool isRequestValid(const std::vector<std::byte> &requestRawData, FunctionCode functionCode); // TODO: Implement the method to validate the request data
+    };;
 
 
 #endif //MBLIBRARY_MODBUSCLIENT_H
