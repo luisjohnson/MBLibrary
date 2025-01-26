@@ -7,6 +7,10 @@
 
 #include <vector>
 #include <boost/asio.hpp>
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/use_awaitable.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/detached.hpp>
 #include "Modbus.h"
 
 namespace Modbus {
@@ -14,7 +18,7 @@ namespace Modbus {
     public:
         explicit Client(std::string ip, int port = 502);
 
-        void connect(); // TODO: Implement the method to establish a connection to the Modbus server
+        boost::asio::awaitable<void> connect(); // TODO: Implement the method to establish a connection to the Modbus server
 
         void disconnect(); // TODO: Implement the method to disconnect from the Modbus server
 
@@ -38,9 +42,9 @@ namespace Modbus {
         boost::asio::io_context _ioContext; 
         boost::asio::ip::tcp::socket _socket; 
         std::string _ip; 
-        int _port; /
+        int _port;
 
-        std::vector<std::byte> requestDataFromServer(const std::vector<std::byte> &requestRawData); // TODO: Implement the method to send a request to the Modbus server and receive the response
+        boost::asio::awaitable<std::vector<std::byte>> requestDataFromServer(const std::vector<std::byte> &requestRawData); // TODO: Implement the method to send a request to the Modbus server and receive the response
 
         bool isRequestValid(const std::vector<std::byte> &requestRawData, FunctionCode functionCode); // TODO: Implement the method to validate the request data
     };;
