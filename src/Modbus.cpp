@@ -1,5 +1,5 @@
 #include <string>
-#include "Modbus.h"
+#include <Modbus.h>
 #include <iomanip>
 #include <sstream>
 

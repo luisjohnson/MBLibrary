@@ -1,6 +1,6 @@
-#include "Modbus.h"
-#include "ModbusPDU.h"
-#include "ModbusDataArea.h"
+#include <Modbus.h>
+#include <ModbusPDU.h>
+#include <ModbusDataArea.h>
 
 Modbus::MBAP Modbus::bytesToMBAP(const std::vector<std::byte> &bytes) {
     if (bytes.size() < 6)

@@ -1,11 +1,7 @@
-//
-// Created by ljohnson on 3/28/2024.
-//
-
 #include <cstddef>
 #include <vector>
-#include "ModbusServer.h"
-#include "ModbusPDU.h"
+#include <ModbusServer.h>
+#include <ModbusPDU.h>
 #include <iostream>
 
 Modbus::Server::MBServer::MBServer(Modbus::DataArea &dataArea) : _modbusDataArea(dataArea) {

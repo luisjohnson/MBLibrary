@@ -1,4 +1,4 @@
-#include "ModbusUtilities.h"
+#include <ModbusUtilities.h>
 
 namespace Modbus::Utilities {
     bool generateRandomBoolean() {

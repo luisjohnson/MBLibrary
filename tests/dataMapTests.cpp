@@ -2,8 +2,8 @@
 // Created by Luis Johnson on 3/17/24.
 //
 #include <gtest/gtest.h>
-#include "ModbusDataArea.h"
-#include "Modbus.h"
+#include <ModbusDataArea.h>
+#include <Modbus.h>
 
 class ModbusDataAreaTestWithFixture : public ::testing::Test {
 protected:
